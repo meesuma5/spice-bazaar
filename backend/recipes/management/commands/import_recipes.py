@@ -4,8 +4,8 @@ import os
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.db import transaction
-from products.models import Users, Recipe  # Replace 'your_app' with your actual app name
-
+from users.models import Users
+from recipes.models import Recipes
 
 class Command(BaseCommand):
     help = 'Import recipes from CSV file'
@@ -25,22 +25,24 @@ class Command(BaseCommand):
         try:
             with transaction.atomic():
                 # Create or get Anonymous user
-                anonymous_user_id = uuid.uuid4()
+                anonymous_id = uuid.uuid4()
                 anonymous_user, created = Users.objects.get_or_create(
                     username='Anonymous',
                     defaults={
-                        'user_id': anonymous_user_id,
+                        'id': anonymous_id,
                         'email': 'anonymous@example.com',
-                        'password': 'pbkdf2_sha256$260000$randomhashhere',
                         'reg_date': timezone.now().date()
                     }
                 )
                 
                 if created:
+                    # Set a default password (but hashed) using set_password
+                    anonymous_user.set_password('pbkdf2_sha256$260000$randomhashhere')
+                    anonymous_user.save()
                     self.stdout.write(self.style.SUCCESS('Created Anonymous user'))
                 else:
                     self.stdout.write(self.style.SUCCESS('Using existing Anonymous user'))
-                    anonymous_user_id = anonymous_user.user_id
+                    anonymous_id = anonymous_user.id
                 
                 # Read and import recipes
                 recipes_imported = 0
@@ -64,7 +66,7 @@ class Command(BaseCommand):
                             recipe_name = 'Untitled Recipe'
                             
                         # Skip if recipe already exists
-                        if Recipe.objects.filter(title=recipe_name).exists():
+                        if Recipes.objects.filter(title=recipe_name).exists():
                             recipes_skipped += 1
                             if recipes_skipped % 50 == 0:
                                 self.stdout.write(f"Skipped {recipes_skipped} existing recipes...")
@@ -106,7 +108,7 @@ class Command(BaseCommand):
                         ingredients_text = ', '.join(ingredient_list)
                         
                         # Create recipe
-                        Recipe.objects.create(
+                        Recipes.objects.create(
                             recipe_id=recipe_id,
                             title=recipe_name,
                             description=row.get('description', ''),
@@ -116,7 +118,7 @@ class Command(BaseCommand):
                             course=row.get('course', ''),
                             prep_time=prep_time,
                             upload_date=timezone.now().date(),
-                            user_id=anonymous_user_id,
+                            user_id=anonymous_id,
                             image=row.get('image_url', '')
                         )
                         
