@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:frontend/widgets/avatar_icon.dart';
+import 'package:spice_bazaar/widgets/avatar_icon.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/feature_card.dart';
 import 'package:uicons/uicons.dart';
-import 'package:frontend/constants.dart';
+import 'package:spice_bazaar/constants.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

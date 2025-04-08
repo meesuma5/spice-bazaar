@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/recipe.dart';
-import 'package:frontend/constants.dart';
+import 'package:spice_bazaar/models/recipe.dart';
+import 'package:spice_bazaar/constants.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
@@ -11,20 +11,6 @@ class RecipeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // For demo purposes, use a placeholder image
     String imageUrl = recipe.imageUrl;
-    // if (imageUrl.startsWith('http')) {
-    //   // In a real app, use the actual image URL
-    //   // For now, use a placeholder based on the recipe ID
-    //   switch (recipe.id) {
-    //     case "1":
-    //       imageUrl = "assets/images/thai_curry.jpg";
-    //       break;
-    //     case "2":
-    //       imageUrl = "assets/images/pizza.jpg";
-    //       break;
-    //     default:
-    //       imageUrl = "assets/images/placeholder.jpg";
-    //   }
-    // }
 
     // Get cuisine type from the first tag
     String cuisineType = recipe.tags.isNotEmpty ? recipe.tags[0] : "";

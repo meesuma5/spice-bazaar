@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
-import 'package:frontend/constants.dart';
-import 'package:frontend/widgets/avatar_icon.dart';
-import 'package:frontend/widgets/custom_button.dart';
+import 'package:spice_bazaar/constants.dart';
+import 'package:spice_bazaar/widgets/avatar_icon.dart';
+import 'package:spice_bazaar/widgets/custom_button.dart';
 import 'dart:convert'; // For utf8.encode
 import 'package:http/http.dart' as http;
 import 'package:uicons/uicons.dart';
@@ -23,12 +23,11 @@ class _LogInScreenState extends State<LogInScreen> {
   Future<void> _signIn() async {
     final email = _emailController.text;
     final password = _passwordController.text;
-    final hashedPassword = sha256.convert(utf8.encode(password)).toString();
 
     try {
       // final response = await http.post(
       //   Uri.parse('https://your-api-endpoint.com/login'),
-      //   body: {'email': email, 'password': hashedPassword},
+      //   body: {'email': email, 'password': password},
       // );
       // if (response.statusCode == 200) {
       //   // Handle successful login

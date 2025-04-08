@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants.dart';
-import 'package:frontend/widgets/bottom_nav_bar.dart';
-import 'package:frontend/widgets/recipe_card.dart';
-import 'package:frontend/models/recipe.dart';
+import 'package:spice_bazaar/constants.dart';
+import 'package:spice_bazaar/models/profile_drawer.dart';
+import 'package:spice_bazaar/widgets/bottom_nav_bar.dart';
+import 'package:spice_bazaar/widgets/recipe_card.dart';
+import 'package:spice_bazaar/models/recipe.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -18,8 +19,9 @@ class DiscoverScreen extends StatefulWidget {
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
   List<Recipe> recipes = [];
-  bool isLoading = true;git 
+  bool isLoading = true;
   String? errorMessage;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -126,6 +128,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: const ProfileDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -142,7 +146,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.black87))),
         ),
-        leading: Icon(UIcons.solidRounded.user),
+        leading: IconButton(
+          icon: Icon(UIcons.solidRounded.user),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         actions: [
           Icon(UIcons.regularRounded.equality),
           const SizedBox(width: 16),

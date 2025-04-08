@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/constants.dart';
+import 'package:spice_bazaar/constants.dart';
 
 class FeatureCard extends StatelessWidget {
   final IconData icon;

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/sign_up_screen.dart';
 import 'screens/log_in_screen.dart';
@@ -6,7 +8,11 @@ import 'screens/create_screen.dart';
 import 'screens/discover_screen.dart';
 import 'screens/save_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const SpiceBazaarApp());
 }
 

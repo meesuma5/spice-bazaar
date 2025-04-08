@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:crypto/crypto.dart';
-import 'package:frontend/constants.dart';
-import 'package:frontend/widgets/avatar_icon.dart';
-import 'package:frontend/widgets/custom_button.dart';
+import 'package:spice_bazaar/constants.dart';
+import 'package:spice_bazaar/services/storage_service.dart';
+import 'package:spice_bazaar/widgets/avatar_icon.dart';
+import 'package:spice_bazaar/widgets/custom_button.dart';
+import 'package:spice_bazaar/widgets/input_field.dart';
 import 'dart:convert'; // For utf8.encode
 import 'package:http/http.dart' as http;
 import 'package:uicons/uicons.dart';
+import 'package:image_picker/image_picker.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -19,17 +23,56 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _bioController = TextEditingController();
   bool _agreedToTerms = false;
   String? _errorMessage;
+  String? _imageUrl;
+  bool _isLoading = false;
 
-  Future<void> _createAccount() async {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  final StorageService _storageService = StorageService();
+
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+          // You now have the File object (_imageFile) which you can upload to Firebase Storage.
+          print('Selected image path: ${_imageFile!.path}');
+          _storageService.uploadFile(_imageFile!.path, _imageFile!).then((url) {
+            setState(() {
+              _imageUrl = url;
+            });
+          }).catchError((error) {
+            print('Error uploading image: $error');
+          });
+        });
+      } else {
+        print('No image selected.');
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+  Future<void> _createAccount(String? url) async {
     // Validate fields
     if (_usernameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
       setState(() {
-        _errorMessage = 'Please fill in all fields';
+        _errorMessage = 'Please fill in all required fields';
       });
       return;
     }
@@ -52,7 +95,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final username = _usernameController.text;
     final email = _emailController.text;
     final password = _passwordController.text;
-    final hashedPassword = sha256.convert(utf8.encode(password)).toString();
+    final bio = _bioController.text;
 
     try {
       final response = await http.post(
@@ -60,7 +103,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
         body: {
           'username': username,
           'email': email,
-          'password': hashedPassword,
+          'password': password,
+          'image_url': url ?? '',
+          'bio': bio,
         },
       );
 
@@ -83,6 +128,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: lighterPurple,
+      appBar: AppBar(
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Spice Bazaar',
+            style: poppins(
+              style: const TextStyle(
+                color: mainPurple,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+        backgroundColor: lighterPurple,
+        surfaceTintColor: lighterPurple,
+        elevation: 0,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
@@ -138,98 +200,64 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Username',
-                              style: poppins(
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500)),
-                            ),
-                            const SizedBox(height: 6),
-                            TextField(
-                              style:
-                                  poppins(style: const TextStyle(fontSize: 12)),
-                              controller: _usernameController,
-                              decoration: const InputDecoration(
-                                hintText: 'chef_jamie',
-                                border: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12))),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
+                            GestureDetector(
+                              onTap: _pickImage,
+                              child: CircleAvatar(
+                                radius: 60,
+                                backgroundColor: Colors.grey[300],
+                                backgroundImage: _imageFile != null
+                                    ? FileImage(_imageFile!)
+                                    : null,
+                                child: _imageFile == null
+                                    ? Icon(
+                                        Icons.add_a_photo_outlined,
+                                        size: 40,
+                                        color: Colors.grey[600],
+                                      )
+                                    : null,
                               ),
                             ),
+                            if (_imageFile == null) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                'Tap to select profile picture',
+                                style: poppins(
+                                    style: const TextStyle(fontSize: 12)),
+                              ),
+                            ],
                             const SizedBox(height: 12),
-                            Text(
-                              'Email address',
-                              style: poppins(
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500)),
+                            InputField(
+                              heading: 'Username',
+                              fieldController: _usernameController,
+                              hintText: 'chef_jamie',
                             ),
-                            const SizedBox(height: 6),
-                            TextField(
-                              style:
-                                  poppins(style: const TextStyle(fontSize: 12)),
-                              controller: _emailController,
-                              decoration: const InputDecoration(
+                            const SizedBox(height: 12),
+                            InputField(
+                                heading: 'Email Address',
+                                fieldController: _emailController,
                                 hintText: 'your.email@example.com',
-                                border: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12))),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                            ),
+                                keyboardType: TextInputType.emailAddress),
                             const SizedBox(height: 12),
-                            Text(
-                              'Password',
-                              style: poppins(
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500)),
-                            ),
-                            const SizedBox(height: 6),
-                            TextField(
-                              style:
-                                  poppins(style: const TextStyle(fontSize: 12)),
-                              controller: _passwordController,
-                              decoration: const InputDecoration(
+                            InputField(
+                                heading: 'Password',
+                                fieldController: _passwordController,
                                 hintText: '••••••••',
-                                border: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12))),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                              ),
-                              obscureText: true,
-                            ),
+                                obscureText: true,
+                                maxLines: 1),
                             const SizedBox(height: 12),
-                            Text(
-                              'Confirm Password',
-                              style: poppins(
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500)),
-                            ),
-                            const SizedBox(height: 6),
-                            TextField(
-                              style:
-                                  poppins(style: const TextStyle(fontSize: 12)),
-                              controller: _confirmPasswordController,
-                              decoration: const InputDecoration(
+                            InputField(
+                                heading: 'Confirm Password',
+                                fieldController: _confirmPasswordController,
                                 hintText: '••••••••',
-                                border: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(12))),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                              ),
-                              obscureText: true,
-                            ),
+                                obscureText: true,
+                                maxLines: 1),
+                            const SizedBox(height: 12),
+                            InputField(
+                                heading: 'Bio',
+                                fieldController: _bioController,
+                                hintText: 'Tell us about yourself(optional)',
+                                maxLines: 3),
                             const SizedBox(height: 12),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +308,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               width: double.infinity,
                               child: CustomButton(
                                 text: "Create account",
-                                onPressed: _createAccount,
+                                onPressed: () async {
+                                  _createAccount(_imageUrl);
+                                },
                               ),
                             ),
                             if (_errorMessage != null) ...[
