@@ -27,10 +27,10 @@ class LoginSerializer(serializers.Serializer):
         try:
             user = Users.objects.get(email=email)
         except Users.DoesNotExist:
-            raise serializers.ValidationError("Invalid credentials")
+            raise serializers.ValidationError("Incorrect email")
 
         if not user.check_password(password):  # uses AbstractBaseUser's built-in check
-            raise serializers.ValidationError("Invalid credentials")
+            raise serializers.ValidationError("Incorrect password")
 
         data['user'] = user
         return data
