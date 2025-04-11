@@ -8,6 +8,8 @@ class CustomButton extends StatelessWidget {
   final Icon? icon;
   final double? vPad, hPad;
   final Color? color;
+  final TextStyle? textStyle;
+  final TextAlign? textAlign;
 
   const CustomButton({
     super.key,
@@ -18,6 +20,8 @@ class CustomButton extends StatelessWidget {
     this.hPad,
     this.vPad,
     this.color,
+    this.textStyle,
+    this.textAlign,
   });
 
   @override
@@ -48,17 +52,15 @@ class CustomButton extends StatelessWidget {
             ),
           Text(
             text,
-            style: poppins(
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.normal,
-                color: (color != null)
-                    ? color
-                    : isOutlined
-                        ? Colors.black87
-                        : Colors.white,
-              ),
-            ),
+            textAlign: textAlign,
+            style: textStyle ??
+                poppins(
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
           ),
         ],
       ),
