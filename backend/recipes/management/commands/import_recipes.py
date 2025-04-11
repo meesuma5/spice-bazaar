@@ -89,6 +89,20 @@ class Command(BaseCommand):
                             prep_time = f"{hours:02d}:{minutes:02d}:00"
                         except (ValueError, TypeError):
                             prep_time = "00:30:00"  # Default to 30 minutes
+
+                        try:
+                            cook_time_minutes = int(float(row.get('cook_time (in mins)', 0)))
+                            
+                            # Handle special case where time would be 24:00:00
+                            if cook_time_minutes >= 24 * 60:
+                                hours = 23
+                                minutes = 59
+                            else:
+                                hours, minutes = divmod(cook_time_minutes, 60)
+                                
+                            cook_time = f"{hours:02d}:{minutes:02d}:00"
+                        except (ValueError, TypeError):
+                            cook_time = "00:30:00"  # Default to 30 minutes
                         
                         # Map ingredients properly
                         ingredients = row.get('ingredients_name', '')
@@ -116,7 +130,9 @@ class Command(BaseCommand):
                             instructions=row.get('instructions', ''),
                             cuisine=row.get('cuisine', ''),
                             course=row.get('course', ''),
+                            diet=row.get('diet', ''),
                             prep_time=prep_time,
+                            cook_time=cook_time,
                             upload_date=timezone.now().date(),
                             user_id=anonymous_id,
                             image=row.get('image_url', '')

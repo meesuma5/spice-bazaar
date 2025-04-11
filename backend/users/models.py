@@ -34,9 +34,7 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, username, password, **extra_fields)
 
 class Users(AbstractBaseUser, PermissionsMixin):
-    """
-    Custom user model that uses email as the unique identifier.
-    """
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=255, unique=True)
     username = models.CharField(max_length=255, unique=True)
@@ -58,9 +56,7 @@ class Users(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "Users"
 
 class Bookmarks(models.Model):
-    """
-    Model to store user bookmarks for recipes.
-    """
+    
     bookmark_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='bookmarks')
     recipe = models.ForeignKey('recipes.Recipes', on_delete=models.CASCADE, related_name='bookmarks')

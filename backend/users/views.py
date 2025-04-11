@@ -2,9 +2,10 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.views import APIView
+from rest_framework.views import APIView 
 
-from .models import Users
+from .models import Users, Bookmarks
+from recipes.models import Recipes
 from .serializers import RegisterSerializer, LoginSerializer, UserUpdateSerializer
 
 
@@ -24,10 +25,21 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+
         refresh = RefreshToken.for_user(user)
+
+        recipe_count = Recipes.objects.filter(user=user).count()
+        bookmark_count = Bookmarks.objects.filter(user=user).count()
+
         return Response({
-            'access': str(refresh.access_token),
             'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'username': user.username,
+            'email': user.email,
+            'reg_date': user.reg_date,
+            'image_link': user.image_link,
+            'recipe_count': recipe_count,
+            'bookmark_count': bookmark_count
         })
 
 
