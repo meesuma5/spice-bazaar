@@ -11,7 +11,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = validated_data.pop('password')
         user = Users(**validated_data)
-        user.set_password(password)  # uses AbstractBaseUser's hashing
+        user.set_password(password)
         user.save()
         return user
 

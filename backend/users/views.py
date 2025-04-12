@@ -9,14 +9,12 @@ from recipes.models import Recipes
 from .serializers import RegisterSerializer, LoginSerializer, UserUpdateSerializer
 
 
-# Register a new user
 class RegisterView(generics.CreateAPIView):
     queryset = Users.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
 
-# Login with email and password, return JWT token
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
     permission_classes = [AllowAny]
@@ -43,18 +41,9 @@ class LoginView(generics.GenericAPIView):
         })
 
 
-# Update user details (requires authentication and old password)
 class UserUpdateView(generics.UpdateAPIView):
     serializer_class = UserUpdateSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
-
-
-class UserDetailView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        serializer = RegisterSerializer(request.user)
-        return Response(serializer.data)
