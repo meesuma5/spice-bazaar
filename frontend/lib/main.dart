@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:spice_bazaar/screens/add_recipe.dart';
+import 'package:spice_bazaar/screens/my_recipes.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/sign_up_screen.dart';
@@ -32,9 +34,10 @@ class SpiceBazaarApp extends StatelessWidget {
         '/': (context) => const HomeScreen(),
         '/signup': (context) => const SignUpScreen(),
         '/login': (context) => const LogInScreen(),
-        '/create': (context) => const CreateScreen(),
-        '/discover': (context) => const DiscoverScreen(),
+        '/addrecipe': (context) => const AddRecipeScreen(),
+        '/discover': (context) => const MainAppScreen(),
         '/save': (context) => const SaveScreen(),
+        '/my_recipes': (context) => const MyRecipesScreen(),
       },
     );
   }

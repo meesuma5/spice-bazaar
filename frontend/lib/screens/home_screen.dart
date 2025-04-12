@@ -72,6 +72,13 @@ class HomeScreen extends StatelessWidget {
                     text: 'Log In',
                     onPressed: () => Navigator.pushNamed(context, '/login'),
                     isOutlined: true,
+                    textStyle: poppins(
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ],
               ),
