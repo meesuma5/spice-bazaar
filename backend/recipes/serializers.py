@@ -39,3 +39,27 @@ class RecipeCatalogSerializer(serializers.ModelSerializer):
     
     def get_author(self, obj):
         return obj.user.username if obj.user else None
+    
+    
+class RecipeViewSerializer(serializers.ModelSerializer):
+    
+    tags = serializers.SerializerMethodField()
+    author = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Recipes
+        fields = ['recipe_id', 'title', 'description', 'ingredients', 'instructions', 'tags', 'prep_time', 'cook_time', 'upload_date',  'author', 'image', 'video_link']
+    
+    def get_tags(self, obj):
+    
+        tags = []
+        if obj.cuisine:
+            tags.append(obj.cuisine)
+        if obj.course:
+            tags.append(obj.course)
+        if obj.diet:
+            tags.append(obj.diet)
+        return tags
+    
+    def get_author(self, obj):
+        return obj.user.username if obj.user else None
