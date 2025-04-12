@@ -63,3 +63,37 @@ class RecipeViewSerializer(serializers.ModelSerializer):
     
     def get_author(self, obj):
         return obj.user.username if obj.user else None
+    
+    
+class RecipeUploadSerializer(serializers.ModelSerializer):    
+    class Meta:
+        model = Recipes
+        fields = ['recipe_id', 'title', 'description', 'ingredients', 'instructions', 'cuisine', 'course', 'diet', 'prep_time', 'cook_time', 'image', 'video_link']
+        read_only_fields = ['recipe_id', 'user']  # user will be set in the view
+        extra_kwargs = {
+            'title': {'required': True},
+            'description': {'required': True},
+            'instructions': {'required': True},
+            'ingredients': {'required': True},
+            'prep_time': {'required': True},
+            'cook_time': {'required': True},
+            'image': {'required': True},
+        }    
+    
+    def validate(self, data):
+        # Validate video link format if provided
+        if data.get('video_link') and not (
+            data['video_link'].startswith('http://') or 
+            data['video_link'].startswith('https://')
+        ):
+            raise serializers.ValidationError(
+                {"video_link": "Video link must be a valid URL starting with http:// or https://"}
+            )
+        return data
+    
+    def create(self, validated_data):
+        # Get the user from the context
+        user = self.context['request'].user
+        # Create recipe with the user
+        recipe = Recipes.objects.create(user=user, **validated_data)
+        return recipe

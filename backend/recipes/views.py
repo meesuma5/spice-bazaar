@@ -2,7 +2,7 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import Recipes
-from .serializers import RecipeCatalogSerializer, RecipeViewSerializer
+from .serializers import RecipeCatalogSerializer, RecipeViewSerializer, RecipeUploadSerializer
 
 class RecipeCatalogView(generics.ListAPIView):
 
@@ -23,3 +23,7 @@ class RecipeViewView(generics.RetrieveAPIView): # for viewing a recipie (any)
     permission_classes = [IsAuthenticated]
     lookup_field = 'recipe_id'
     queryset = Recipes.objects.all().select_related('user')
+    
+class RecipeUploadView(generics.CreateAPIView):
+    serializer_class = RecipeUploadSerializer
+    permission_classes = [IsAuthenticated]
