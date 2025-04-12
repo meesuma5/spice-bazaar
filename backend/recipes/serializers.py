@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Recipes
 from django.utils.duration import duration_string
+from django.utils import timezone
 
 class RecipeCatalogSerializer(serializers.ModelSerializer):
     
@@ -81,6 +82,16 @@ class RecipeUploadSerializer(serializers.ModelSerializer):
         }    
     
     def validate(self, data):
+        # Check daily recipe limit
+        user = self.context['request'].user
+        today = timezone.now().date()
+        recipes_today = Recipes.objects.filter(user=user, upload_date=today).count()
+        
+        if recipes_today >= 3:
+            raise serializers.ValidationError(
+                {"non_field_errors": "You can only upload up to 3 recipes per day. Please try again tomorrow."}
+            )
+            
         # Validate video link format if provided
         if data.get('video_link') and not (
             data['video_link'].startswith('http://') or 
