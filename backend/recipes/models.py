@@ -23,3 +23,5 @@ class Recipes(models.Model):
     class Meta:
         db_table = 'Recipes'
         verbose_name_plural = "Recipes"
+        
+        
