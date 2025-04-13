@@ -613,6 +613,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  uicons_updated:
+    dependency: "direct main"
+    description:
+      name: uicons_updated
+      sha256: e03543e695e02347b181ca285608d28065a2245dec9ba22919dbb5bf72961595
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.5"
   vector_graphics:
     dependency: transitive
     description:

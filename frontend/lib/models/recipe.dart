@@ -1,39 +1,37 @@
 class Recipe {
-  final String id;
+  final String recipeId;
   final String title;
   final String description;
-  final String imageUrl;
   final List<String> tags;
   final int prepTime;
-  final int cookTime;
-  final double rating;
+  final int? cookTime;
+  final String uploadDate;
   final String author;
+  final String? image; // Mark as nullable with ?
 
   Recipe({
-    required this.id,
+    required this.recipeId,
     required this.title,
     required this.description,
-    required this.imageUrl,
     required this.tags,
     required this.prepTime,
-    required this.cookTime,
-    required this.rating,
+    required this.uploadDate,
     required this.author,
+		this.cookTime, // Optional cook time
+    this.image, // Handle nullable image
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
     return Recipe(
-      id: json['id'],
-      title: json['title'],
-      description: json['description'],
-      imageUrl: json['image_url'],
-      tags: List<String>.from(json['tags']),
-      prepTime: json['prep_time'],
-      cookTime: json['cook_time'],
-      rating: json['rating'].toDouble(),
-      author: json['author'],
+      recipeId: json['recipe_id'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      tags: List<String>.from(json['tags'] ?? []),
+      prepTime: json['time'] ?? 0,
+			cookTime: json['cook_time'], // No default needed as it's nullable
+      uploadDate: json['upload_date'] ?? '',
+      author: json['author'] ?? '',
+      image: json['image'], // No default needed as it's nullable
     );
   }
-
-  int get totalTime => prepTime + cookTime;
 }

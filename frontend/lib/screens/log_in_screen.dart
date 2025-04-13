@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:crypto/crypto.dart';
 import 'package:spice_bazaar/constants.dart';
+import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/widgets/avatar_icon.dart';
 import 'package:spice_bazaar/widgets/custom_button.dart';
 import 'dart:convert'; // For utf8.encode
@@ -25,21 +25,24 @@ class _LogInScreenState extends State<LogInScreen> {
     final password = _passwordController.text;
 
     try {
-      // final response = await http.post(
-      //   Uri.parse('https://your-api-endpoint.com/login'),
-      //   body: {'email': email, 'password': password},
-      // );
-      // if (response.statusCode == 200) {
-      //   // Handle successful login
-      //   Navigator.pushReplacementNamed(context, '/discover');
-      // } else {
-      //   setState(() {
-      //     _errorMessage = 'Invalid email or password';
-      //   });
-      // }
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/acc/login/'),
+        body: {'email': email, 'password': password},
+      );
+      if (response.statusCode == 200) {
+        // Handle successful login
+				final User user = User.fromJson(json.decode(response.body));
+        Navigator.pushReplacementNamed(context, '/discover', arguments: user);
+			}
+      else {
+        setState(() {
+          _errorMessage = 'Invalid email or password';
+        });
+      }
       // uncomment the above and comment the below in production
-      Navigator.pushReplacementNamed(context, '/discover');
+      // Navigator.pushReplacementNamed(context, '/discover');
     } catch (e) {
+			print(e);
       setState(() {
         _errorMessage = 'An error occurred. Please try again later.';
       });

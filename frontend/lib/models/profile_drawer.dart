@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:spice_bazaar/constants.dart';
+import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/widgets/custom_button.dart';
 import 'package:uicons/uicons.dart';
 
 // Create a new file for your profile drawer
 class ProfileDrawer extends StatelessWidget {
-  const ProfileDrawer({super.key});
+  final User user;
+  const ProfileDrawer({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -22,32 +24,23 @@ class ProfileDrawer extends StatelessWidget {
                 onPressed: () => Navigator.pop(context),
               ),
             ),
-            const Center(
+            Center(
               child: CircleAvatar(
                 radius: 40,
                 backgroundImage: NetworkImage(
-                  'https://i.pravatar.cc/300', // Sample avatar image
+                  user.profileImageUrl ??
+                      baseProfileImageLink, // Sample avatar image
                 ),
               ),
             ),
             const SizedBox(height: 16),
             Center(
               child: Text(
-                'John Doe',
+                user.username,
                 style: poppins(
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            Center(
-              child: Text(
-                '@john_doe',
-                style: poppins(
-                  style: const TextStyle(
-                    color: Colors.grey,
                   ),
                 ),
               ),
@@ -78,18 +71,19 @@ class ProfileDrawer extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCountInfo('3', 'Recipes'),
+                  _buildCountInfo(user.createdRecipes.toString(), 'Recipes'),
                   const SizedBox(
                     width: 16,
                   ),
-                  _buildCountInfo('5', 'Bookmarks'),
+                  _buildCountInfo(
+                      user.bookmarkedRecipes.toString(), 'Bookmarks'),
                 ],
               ),
             ),
             const SizedBox(height: 8),
-            _buildInfoSection('Email', 'john.doe@example.com'),
+            _buildInfoSection('Email', user.email),
             const SizedBox(height: 12),
-            _buildInfoSection('Joined', 'January 2024'),
+            _buildInfoSection('Joined', user.regDate),
             const Spacer(),
             Padding(
               padding: const EdgeInsets.all(20.0),

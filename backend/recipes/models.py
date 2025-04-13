@@ -14,8 +14,8 @@ class Recipes(models.Model):
     cook_time = models.TimeField()
     upload_date = models.DateField(auto_now_add=True)
     user = models.ForeignKey('users.Users', on_delete=models.CASCADE, related_name='recipes')
-    image = models.CharField(max_length=255)
-    video_link = models.CharField(max_length=255, null=True, blank=True)
+    image = models.CharField(max_length=1024, null=True)
+    video_link = models.CharField(max_length=1024, null=True, blank=True)
     
     def __str__(self):
         return self.title

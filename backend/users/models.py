@@ -38,7 +38,7 @@ class Users(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=255, unique=True)
     username = models.CharField(max_length=255, unique=True)
-    image_link = models.CharField(max_length=255, null=True, blank=True)
+    image_link = models.CharField(max_length=1024, null=True, blank=True)
     reg_date = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

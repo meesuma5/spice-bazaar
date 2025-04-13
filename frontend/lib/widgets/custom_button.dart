@@ -55,8 +55,8 @@ class CustomButton extends StatelessWidget {
             textAlign: textAlign,
             style: textStyle ??
                 poppins(
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: isOutlined ? Colors.black87 : Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),

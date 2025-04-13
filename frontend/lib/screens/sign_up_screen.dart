@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:spice_bazaar/constants.dart';
+import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/services/storage_service.dart';
 import 'package:spice_bazaar/widgets/avatar_icon.dart';
 import 'package:spice_bazaar/widgets/custom_button.dart';
@@ -10,6 +11,7 @@ import 'dart:convert'; // For utf8.encode
 import 'package:http/http.dart' as http;
 import 'package:uicons/uicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:uicons_updated/uicons.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -23,7 +25,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _bioController = TextEditingController();
   bool _agreedToTerms = false;
   String? _errorMessage;
   String? _imageUrl;
@@ -52,6 +53,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           _storageService.uploadFile(_imageFile!.path, _imageFile!).then((url) {
             setState(() {
               _imageUrl = url;
+              print(_imageUrl);
             });
           }).catchError((error) {
             print('Error uploading image: $error');
@@ -65,7 +67,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  Future<void> _createAccount(String? url) async {
+  Future<void> _createAccount() async {
     // Validate fields
     if (_usernameController.text.isEmpty ||
         _emailController.text.isEmpty ||
@@ -95,23 +97,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final username = _usernameController.text;
     final email = _emailController.text;
     final password = _passwordController.text;
-    final bio = _bioController.text;
 
     try {
       final response = await http.post(
-        Uri.parse('https://your-api-endpoint.com/signup'),
+        Uri.parse('$baseUrl/api/acc/register/'),
         body: {
           'username': username,
           'email': email,
           'password': password,
-          'image_url': url ?? '',
-          'bio': bio,
+          'image_link': _imageUrl ?? '',
         },
       );
-
       if (response.statusCode == 201) {
-        // Handle successful account creation
-        Navigator.pushReplacementNamed(context, '/discover');
+        // Check if widget is still mounted before using context
+        if (mounted) {
+          // Navigate to login.
+          var arguments = {
+            "icon": UiconsRegular.user_chef,
+            "message":
+                "Welcome Aboard Chef! We're so happy to have you. Redirecting you to the login page.",
+            "navigationRoute": "/login",
+          };
+          Navigator.pushReplacementNamed(
+            context,
+            '/confirmation',
+            arguments: arguments,
+          );
+        }
       } else {
         setState(() {
           _errorMessage = 'Failed to create account. Please try again.';
@@ -253,12 +265,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 obscureText: true,
                                 maxLines: 1),
                             const SizedBox(height: 12),
-                            InputField(
-                                heading: 'Bio',
-                                fieldController: _bioController,
-                                hintText: 'Tell us about yourself(optional)',
-                                maxLines: 3),
-                            const SizedBox(height: 12),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -309,7 +315,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: CustomButton(
                                 text: "Create account",
                                 onPressed: () async {
-                                  _createAccount(_imageUrl);
+                                  _createAccount();
                                 },
                               ),
                             ),
