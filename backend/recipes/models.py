@@ -1,12 +1,13 @@
 import uuid
 from django.db import models
+from django.db.models import JSONField
 
 class Recipes(models.Model):
     recipe_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.TextField()
     description = models.TextField()
-    ingredients = models.CharField(max_length=1000)
-    instructions = models.TextField()
+    ingredients = JSONField(default=list)
+    instructions = JSONField(default=list)
     cuisine = models.TextField(null=True, blank=True)
     course = models.TextField(null=True, blank=True)
     diet = models.TextField(null=True, blank=True)

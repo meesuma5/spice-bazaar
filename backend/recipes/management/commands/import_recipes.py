@@ -6,6 +6,8 @@ from django.utils import timezone
 from django.db import transaction
 from users.models import Users
 from recipes.models import Recipes
+import json
+import ast
 
 class Command(BaseCommand):
     help = 'Import recipes from CSV file'
@@ -69,7 +71,7 @@ class Command(BaseCommand):
                         if Recipes.objects.filter(title=recipe_name).exists():
                             recipes_skipped += 1
                             if recipes_skipped % 50 == 0:
-                                self.stdout.write(f"Skipped {recipes_skipped} existing recipes...")
+                                self.stdout.write(f"Skipped {recipes_skipped} existing or invalid recipes...")
                             continue
                             
                         # Map CSV columns to database fields
@@ -104,30 +106,41 @@ class Command(BaseCommand):
                         except (ValueError, TypeError):
                             cook_time = "00:30:00"  # Default to 30 minutes
                         
-                        # Map ingredients properly
-                        ingredients = row.get('ingredients_name', '')
-                        quantities = row.get('ingredients_quantity', '')
-                        
-                        # Combine ingredients and quantities if available
-                        ingredient_list = []
-                        if ingredients and quantities:
-                            ing_items = ingredients.split(',')
-                            qty_items = quantities.split(',')
-                            
-                            for i in range(min(len(ing_items), len(qty_items))):
-                                ingredient_list.append(f"{qty_items[i].strip()} {ing_items[i].strip()}")
-                        else:
-                            ingredient_list = [ingredients]
-                        
-                        ingredients_text = ', '.join(ingredient_list)
-                        
+                        try:
+                            # First try standard JSON parsing
+                            ingredients_json = json.loads(row.get('parsed_ingredients', '[]'))
+                        except json.JSONDecodeError:
+                            try:
+                                # If that fails, try parsing it as a Python literal
+                                ingredients_str = row.get('parsed_ingredients', '[]')
+                                ingredients_json = ast.literal_eval(ingredients_str)
+                            except:
+                                ingredients_json = False
+
+                        try:
+                            # First try standard JSON parsing
+                            instructions_json = json.loads(row.get('parsed_instructions', '[]'))
+                        except json.JSONDecodeError:
+                            try:
+                                # If that fails, try parsing it as a Python literal
+                                instructions_str = row.get('parsed_instructions', '[]')
+                                instructions_json = ast.literal_eval(instructions_str)
+                            except:
+                                instructions_json = False
+
+                        if not ingredients_json or not instructions_json:
+                            recipes_skipped += 1
+                            if recipes_skipped % 50 == 0:
+                                self.stdout.write(f"Skipped {recipes_skipped} existing or invalid recipes...")
+                            continue
+
                         # Create recipe
                         Recipes.objects.create(
                             recipe_id=recipe_id,
                             title=recipe_name,
                             description=row.get('description', ''),
-                            ingredients=ingredients_text[:1000],  # Truncate to fit VARCHAR(1000)
-                            instructions=row.get('instructions', ''),
+                            ingredients=ingredients_json,
+                            instructions=instructions_json,
                             cuisine=row.get('cuisine', ''),
                             course=row.get('course', ''),
                             diet=row.get('diet', ''),
