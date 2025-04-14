@@ -2,13 +2,13 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from .models import Recipes
-from .serializers import RecipeCatalogSerializer, RecipeViewSerializer, RecipeUploadSerializer
+from .serializers import RecipeCatalogSerializer, RecipeViewSerializer, RecipeUploadSerializer, RecipeEditSerializer, RecipeDeleteSerializer
 
 class RecipeCatalogView(generics.ListAPIView):
 
     queryset = Recipes.objects.all().order_by('-upload_date').select_related('user') 
     serializer_class = RecipeCatalogSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
 class UserRecipesView(generics.ListAPIView): # for getting a particular user's recipes, used to check your own uploaded recipes
     serializer_class = RecipeCatalogSerializer
@@ -27,3 +27,17 @@ class RecipeViewView(generics.RetrieveAPIView): # for viewing a recipie (any)
 class RecipeUploadView(generics.CreateAPIView):
     serializer_class = RecipeUploadSerializer
     permission_classes = [IsAuthenticated]
+    
+class RecipeEditView(generics.UpdateAPIView): # gives PUT request
+    serializer_class = RecipeEditSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'recipe_id'
+    queryset = Recipes.objects.all().select_related('user')
+    
+class RecipeDeleteView(generics.DestroyAPIView): # gives DELETE request
+    serializer_class = RecipeDeleteSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'recipe_id'
+    def get_queryset(self):
+        # Only return recipes owned by the current user. This ensures users can only delete their own recipes
+        return Recipes.objects.filter(user=self.request.user)
