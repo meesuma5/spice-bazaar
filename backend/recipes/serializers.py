@@ -11,11 +11,12 @@ class RecipeCatalogSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Recipes
+        # coming from the models
         fields = ['recipe_id', 'title', 'description', 'tags', 'time', 'upload_date', 'author', 'image']
     
     def get_tags(self, obj):
     
-        tags = []
+        tags = [] # making it as tags to be displayed easily on the catalog
         if obj.cuisine:
             tags.append(obj.cuisine)
         if obj.course:
@@ -26,7 +27,7 @@ class RecipeCatalogSerializer(serializers.ModelSerializer):
     
     def get_time(self, obj):
         total_minutes = 0
-        
+        # making it as tags to be displayed easily on the catalog
         if obj.prep_time:
             hours, minutes, seconds = obj.prep_time.hour, obj.prep_time.minute, obj.prep_time.second
             total_minutes += (hours * 60) + minutes
@@ -71,7 +72,7 @@ class RecipeUploadSerializer(serializers.ModelSerializer):
         model = Recipes
         fields = ['recipe_id', 'title', 'description', 'ingredients', 'instructions', 'cuisine', 'course', 'diet', 'prep_time', 'cook_time', 'image', 'video_link']
         read_only_fields = ['recipe_id', 'user']  # user will be set in the view
-        extra_kwargs = {
+        extra_kwargs = { # making them as required since they are needed during upload (will give error if not provided)
             'title': {'required': True},
             'description': {'required': True},
             'instructions': {'required': True},
@@ -82,7 +83,7 @@ class RecipeUploadSerializer(serializers.ModelSerializer):
         }    
     
     def validate(self, data):
-        # Check daily recipe limit
+        # Check daily recipe limit to 3
         user = self.context['request'].user
         today = timezone.now().date()
         recipes_today = Recipes.objects.filter(user=user, upload_date=today).count()
@@ -108,3 +109,20 @@ class RecipeUploadSerializer(serializers.ModelSerializer):
         # Create recipe with the user
         recipe = Recipes.objects.create(user=user, **validated_data)
         return recipe
+    
+    
+class RecipeEditSerializer(serializers.ModelSerializer):    
+    class Meta:
+        model = Recipes
+        fields = ['title', 'description', 'ingredients', 'instructions', 'cuisine', 'course', 'diet', 'prep_time', 'cook_time', 'image', 'video_link']
+        extra_kwargs = { # marking as optional since not all of them will be needed during update
+            'title': {'required': False},
+            'description': {'required': False},
+            'instructions': {'required': False},
+            'ingredients': {'required': False},
+            'prep_time': {'required': False},
+            'cook_time': {'required': False},
+            'image': {'required': False},
+        }
+        
+        
