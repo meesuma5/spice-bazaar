@@ -114,7 +114,9 @@ class RecipeUploadSerializer(serializers.ModelSerializer):
 class RecipeEditSerializer(serializers.ModelSerializer):    
     class Meta:
         model = Recipes
-        fields = ['title', 'description', 'ingredients', 'instructions', 'cuisine', 'course', 'diet', 'prep_time', 'cook_time', 'image', 'video_link']
+        # we will be sending this as a response, or can be taken as a request
+        fields = ['recipe_id', 'title', 'description', 'ingredients', 'instructions', 'cuisine', 'course', 'diet', 'prep_time', 'cook_time', 'image', 'video_link']
+        read_only_fields = ['recipe_id', 'user']  # user will be set in the view
         extra_kwargs = { # marking as optional since not all of them will be needed during update
             'title': {'required': False},
             'description': {'required': False},
@@ -125,4 +127,34 @@ class RecipeEditSerializer(serializers.ModelSerializer):
             'image': {'required': False},
         }
         
+    def validate(self, data):
+        # Validate video link format if provided and changed
+        if data.get('video_link') and not (
+            data['video_link'].startswith('http://') or 
+            data['video_link'].startswith('https://')
+        ):
+            raise serializers.ValidationError(
+                {"video_link": "Video link must be a valid URL starting with http:// or https://"}
+            )
         
+        # Validate that recipe belongs to the user attempting to edit it
+        recipe = self.instance
+        user = self.context['request'].user
+        if recipe.user != user:
+            raise serializers.ValidationError(
+                {"non_field_errors": "You can only edit your own recipes."}
+            )
+            
+        return data
+    
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        return instance
+    
+class RecipeDeleteSerializer(serializers.ModelSerializer):    
+    class Meta:
+        model = Recipes
+        read_only_fields = ['user']
