@@ -47,5 +47,5 @@ class ReviewDeleteView(APIView):
             return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
             
         review.delete()
-        
-        return Response({"message": "Review deleted successfully"}, status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
