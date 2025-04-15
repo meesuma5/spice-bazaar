@@ -1,5 +1,6 @@
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
+# from users.models import Bookmarks
 
 from .models import Recipes
 from .serializers import RecipeCatalogSerializer, RecipeViewSerializer, RecipeUploadSerializer, RecipeEditSerializer, RecipeDeleteSerializer
@@ -22,8 +23,11 @@ class RecipeViewView(generics.RetrieveAPIView): # for viewing a recipie (any)
     serializer_class = RecipeViewSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'recipe_id'
-    queryset = Recipes.objects.all().select_related('user')
     
+    def get_queryset(self): # Optimizes database queries by prefetching related objects that will be used in the serializer.
+        return Recipes.objects.all().select_related('user').prefetch_related('reviews__user')
+
+
 class RecipeUploadView(generics.CreateAPIView):
     serializer_class = RecipeUploadSerializer
     permission_classes = [IsAuthenticated]

@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Recipes
 from django.utils.duration import duration_string
 from django.utils import timezone
+from reviews.models import Reviews
+from users.models import Bookmarks
 
 class RecipeCatalogSerializer(serializers.ModelSerializer):
     
@@ -41,19 +43,32 @@ class RecipeCatalogSerializer(serializers.ModelSerializer):
     
     def get_author(self, obj):
         return obj.user.username if obj.user else None
+
+
+class ReviewBriefSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
     
+    class Meta:
+        model = Reviews
+        fields = ['review_id', 'username', 'rating', 'comment', 'review_date']
     
+    def get_username(self, obj):
+        return obj.user.username
+
+
 class RecipeViewSerializer(serializers.ModelSerializer):
-    
+    reviews = serializers.SerializerMethodField()
+    is_bookmarked = serializers.SerializerMethodField()
+    your_review = serializers.SerializerMethodField()
+    is_owner = serializers.SerializerMethodField()
     tags = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     
     class Meta:
         model = Recipes
-        fields = ['recipe_id', 'title', 'description', 'ingredients', 'instructions', 'tags', 'prep_time', 'cook_time', 'upload_date',  'author', 'image', 'video_link']
+        fields = ['recipe_id', 'title', 'description', 'ingredients', 'instructions', 'tags', 'prep_time', 'cook_time', 'upload_date',  'author', 'image', 'video_link', 'your_review', 'reviews', 'is_owner', 'is_bookmarked'] 
     
     def get_tags(self, obj):
-    
         tags = []
         if obj.cuisine:
             tags.append(obj.cuisine)
@@ -66,7 +81,33 @@ class RecipeViewSerializer(serializers.ModelSerializer):
     def get_author(self, obj):
         return obj.user.username if obj.user else None
     
+    def get_your_review(self, obj): # Return the current user's review if it exists
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            review = obj.reviews.filter(user=request.user).first()
+            if review:
+                return ReviewBriefSerializer(review).data
+        return None
     
+    def get_reviews(self, obj):
+        request = self.context.get('request')
+        # Using the related_name 'reviews' defined in the Reviews model
+        reviews = obj.reviews.exclude(user=request.user).select_related('user').order_by('-review_date')
+        return ReviewBriefSerializer(reviews, many=True).data
+
+    def get_is_bookmarked(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return Bookmarks.objects.filter(user=request.user, recipe=obj).exists()
+        return False
+    
+    def get_is_owner(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return obj.user == request.user
+        return False
+
+
 class RecipeUploadSerializer(serializers.ModelSerializer):    
     class Meta:
         model = Recipes
