@@ -3,12 +3,20 @@
 import 'package:flutter/material.dart';
 import 'package:spice_bazaar/constants.dart';
 import 'package:spice_bazaar/models/recipe.dart';
+import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/widgets/recipe_card.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class DiscoverContent extends StatefulWidget {
-  const DiscoverContent({super.key});
+  final Function(Recipe) onRecipeSelected;
+	final User user; // User object to fetch recipes of
+
+  const DiscoverContent({
+    super.key,
+    required this.onRecipeSelected,
+		required this.user,
+  });
 
   @override
   State<DiscoverContent> createState() => _DiscoverContentState();
@@ -29,7 +37,9 @@ class _DiscoverContentState extends State<DiscoverContent> {
   Future<void> _fetchRecipes() async {
     try {
       final response =
-          await http.get(Uri.parse('$baseUrl/api/recipes/catalog/'));
+          await http.get(Uri.parse('$baseUrl/api/recipes/catalog/'), headers: {
+						'Authorization': 'Bearer ${widget.user.accessToken}',
+					});
 
       // Check if response is valid before proceeding
       if (response.statusCode == 200) {
@@ -92,7 +102,9 @@ class _DiscoverContentState extends State<DiscoverContent> {
                         )
                       : Padding(
                           padding: const EdgeInsets.only(bottom: 16.0),
-                          child: RecipeCard(recipe: recipes[index - 1]),
+                          child: RecipeCard(
+                              recipe: recipes[index - 1],
+                              onTap: widget.onRecipeSelected),
                         );
                 },
               );

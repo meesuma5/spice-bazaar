@@ -6,6 +6,7 @@ import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/screens/main_app_content/add_recipe.dart';
 import 'package:spice_bazaar/screens/main_app_content/discover.dart';
 import 'package:spice_bazaar/screens/main_app_content/my_recipes.dart';
+import 'package:spice_bazaar/screens/main_app_content/view_recipe.dart';
 import 'package:spice_bazaar/widgets/bottom_nav_bar.dart';
 import 'package:spice_bazaar/models/recipe.dart';
 import 'package:http/http.dart' as http;
@@ -31,8 +32,9 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
   // Track if AddRecipe is currently shown
   bool _showingAddRecipe = false;
-	// Track if a Recipe is currently being seen
-  bool _showingRecipe = false; 
+  // Track if a Recipe is currently being seen
+  bool _showingRecipeDetail = false;
+  Recipe? _selectedRecipe;
 
   // For editing a recipe
   Recipe? _recipeToEdit;
@@ -53,6 +55,8 @@ class _MainAppScreenState extends State<MainAppScreen> {
       print(index);
       _currentIndex = index;
       _showingAddRecipe = false; // Reset add recipe flag when nav button tapped
+      _showingRecipeDetail =
+          false; // Reset recipe detail flag when nav button tapped
       _recipeToEdit = null; // Clear any recipe being edited
     });
   }
@@ -62,6 +66,20 @@ class _MainAppScreenState extends State<MainAppScreen> {
       _showingAddRecipe = true;
       _recipeToEdit =
           recipeToEdit; // Store the recipe to edit (null if adding new)
+    });
+  }
+
+  void showRecipeDetail(Recipe recipe) {
+    setState(() {
+      _showingRecipeDetail = true;
+      _selectedRecipe = recipe;
+    });
+  }
+
+  void hideRecipeDetail() {
+    setState(() {
+      _showingRecipeDetail = false;
+      _selectedRecipe = null;
     });
   }
 
@@ -82,24 +100,30 @@ class _MainAppScreenState extends State<MainAppScreen> {
         title: Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            _showingAddRecipe
-                ? _recipeToEdit != null
-                    ? 'Edit Recipe'
-                    : 'Add Recipe'
-                : 'SpiceBazaar',
+            _showingRecipeDetail
+                ? _selectedRecipe?.title ?? 'Recipe'
+                : _showingAddRecipe
+                    ? _recipeToEdit != null
+                        ? 'Edit Recipe'
+                        : 'Add Recipe'
+                    : 'SpiceBazaar',
             style: poppins(
                 style: const TextStyle(
                     fontWeight: FontWeight.bold, color: Colors.black87)),
           ),
         ),
-        leading: _showingAddRecipe
+        leading: (_showingAddRecipe || _showingRecipeDetail)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
                   setState(() {
-                    print(_currentIndex);
-                    _showingAddRecipe = false;
-                    _recipeToEdit = null;
+                    if (_showingAddRecipe) {
+                      _showingAddRecipe = false;
+                      _recipeToEdit = null;
+                    } else if (_showingRecipeDetail) {
+                      _showingRecipeDetail = false;
+                      _selectedRecipe = null;
+                    }
                   });
                 },
               )
@@ -115,23 +139,31 @@ class _MainAppScreenState extends State<MainAppScreen> {
       ),
       body: _showingAddRecipe
           ? const AddRecipeContent() // Show Add Recipe when flag is set
-          : IndexedStack(
-              index: _currentIndex,
-              children: [
-                MyRecipesContent(
-                  showAddRecipe: showAddRecipe,
-                  user: _user, // Pass the method down
-                ), // Index 0 - My Recipes Content
-                _showingRecipe ? DiscoverContent() :, // Index 1 - Discover Content
-                Container(), // Index 2 - Placeholder for third tab if needed
-              ],
-            ),
+          : _showingRecipeDetail
+              ? RecipeDetailContent(
+                  user: _user,
+                  recipe: _selectedRecipe!,
+                  onBack: hideRecipeDetail,
+                )
+              : IndexedStack(
+                  index: _currentIndex,
+                  children: [
+                    MyRecipesContent(
+                      showAddRecipe: showAddRecipe,
+                      user: _user,
+                      onRecipeSelected: showRecipeDetail, // Add this callback
+                    ),
+                    DiscoverContent(
+                      user: _user,
+                      onRecipeSelected: showRecipeDetail, // Add this callback
+                    ),
+                    Container(), // Placeholder for third tab
+                  ],
+                ),
       bottomNavigationBar: BottomNavBar(
-        index: _showingAddRecipe
-            ? -1
-            : _currentIndex, // Pass -1 when showing add recipe
+        index: (_showingAddRecipe || _showingRecipeDetail) ? -1 : _currentIndex,
         onTap: _onNavItemTapped,
-        onAddRecipe: showAddRecipe, // Add new callback for Add Recipe button
+        onAddRecipe: showAddRecipe,
       ),
     );
   }

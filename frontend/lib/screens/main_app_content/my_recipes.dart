@@ -15,11 +15,12 @@ class MyRecipesContent extends StatefulWidget {
   final User user; // User object to fetch recipes of
   final Function({Recipe? recipeToEdit})
       showAddRecipe; // Function to show add recipe screen
-
+  final Function(Recipe) onRecipeSelected;
   const MyRecipesContent({
     super.key,
     required this.showAddRecipe,
     required this.user,
+    required this.onRecipeSelected,
   });
 
   @override
@@ -60,6 +61,7 @@ class _MyRecipesContentState extends State<MyRecipesContent> {
           throw Exception('Invalid response format');
         }
       } else {
+        print(response.body); // Log the response body for debugging
         throw Exception('Failed to load recipes: ${response.statusCode}');
       }
     } catch (e) {
@@ -142,6 +144,7 @@ class _MyRecipesContentState extends State<MyRecipesContent> {
                           : Padding(
                               padding: const EdgeInsets.only(bottom: 16.0),
                               child: UserRecipeCard(
+                                onTap: widget.onRecipeSelected,
                                 recipe: userRecipes[index - 1],
                                 onEdit: () =>
                                     _editRecipe(userRecipes[index - 1]),
