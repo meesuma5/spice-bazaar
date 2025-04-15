@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:spice_bazaar/models/recipe.dart';
 import 'package:spice_bazaar/constants.dart';
+import 'package:uicons_updated/icons/uicons_regular.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
+  final Function(Recipe) onTap;
 
-  const RecipeCard({super.key, required this.recipe});
+  const RecipeCard({
+    super.key,
+    required this.recipe,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -95,11 +101,11 @@ class RecipeCard extends StatelessWidget {
                     // Cook Time
                     Row(
                       children: [
-                        Icon(Icons.access_time,
+                        Icon(UiconsRegular.time_forward,
                             size: 16, color: Colors.grey[600]),
                         const SizedBox(width: 4),
                         Text(
-                          "${recipe.prepTime + (recipe.cookTime ?? 0)} min",
+                          recipe.formattedPrepTime,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -112,12 +118,11 @@ class RecipeCard extends StatelessWidget {
                     // Difficulty
                     Row(
                       children: [
-                        Icon(Icons.restaurant,
+                        Icon(UiconsRegular.restaurant,
                             size: 16, color: Colors.grey[600]),
                         const SizedBox(width: 4),
                         Text(
-                          _getDifficultyLevel(
-                              recipe.prepTime + (recipe.cookTime ?? 0)),
+                          _getDifficultyLevel(int.parse(recipe.prepTime)),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -126,21 +131,6 @@ class RecipeCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(width: 16),
-
-                    // Rating / Likes
-                    // Row(
-                    //   children: [
-                    //     Icon(Icons.favorite, size: 16, color: Colors.grey[600]),
-                    //     const SizedBox(width: 4),
-                    //     Text(
-                    //       _getLikesCount(recipe.rating),
-                    //       style: TextStyle(
-                    //         fontSize: 14,
-                    //         color: Colors.grey[600],
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -150,9 +140,7 @@ class RecipeCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     OutlinedButton(
-                      onPressed: () {
-                        // Navigate to recipe detail screen
-                      },
+                      onPressed: () => onTap(recipe),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.grey),
                         shape: RoundedRectangleBorder(
@@ -209,6 +197,7 @@ class UserRecipeCard extends RecipeCard {
     required super.recipe,
     required this.onEdit,
     required this.onDelete,
+    required super.onTap,
     super.key,
   });
 
@@ -282,7 +271,8 @@ class UserRecipeCard extends RecipeCard {
                   children: [
                     const Icon(Icons.access_time, size: 20),
                     const SizedBox(width: 4),
-                    Text('${recipe.prepTime + (recipe.cookTime ?? 0)} min'),
+                    Text(
+                        '${int.parse(recipe.prepTime) + int.parse(recipe.cookTime ?? '0')} min'),
                   ],
                 ),
               ],
