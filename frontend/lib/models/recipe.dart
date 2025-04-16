@@ -136,16 +136,42 @@ class Recipe {
       image: image ?? this.image,
     );
   }
+
+	String getPrepTimeInMinutes(){
+		if (RegExp(r'^\d+$').hasMatch(prepTime)) {
+			// It's an integer (minutes)
+			return (int.parse(prepTime)).toString();
+		} else if (RegExp(r'^\d{2}:\d{2}:\d{2}$').hasMatch(prepTime)) {
+			// It's in time format HH:MM:SS
+			final parts = prepTime.split(':');
+			return (int.parse(parts[0]) * 60 + int.parse(parts[1])).toString();
+		}
+		return '0'; // Default to 0 if format is unknown
+	}
+	String getCookTimeInMinutes(){
+		if (cookTime == null || cookTime!.isEmpty) return '0'; // Handle null or empty cook time
+		if (RegExp(r'^\d+$').hasMatch(cookTime!)) {
+			// It's an integer (minutes)
+			return (int.parse(cookTime!)).toString();
+		} else if (RegExp(r'^\d{2}:\d{2}:\d{2}$').hasMatch(cookTime!)) {
+			// It's in time format HH:MM:SS
+			final parts = cookTime!.split(':');
+			return (int.parse(parts[0]) * 60 + int.parse(parts[1])).toString();
+		}
+		return '0'; // Default to 0 if format is unknown
+	}
 }
 
 class DetailedRecipe {
   final Recipe recipe;
   final List<Ingredient> ingredients;
   final List<String> instructions;
+	final String? video_link;
   DetailedRecipe({
     required this.recipe,
     required List<dynamic> ingredients,
     required this.instructions,
+		this.video_link,
   }) : ingredients = ingredients
             .map((ingredientJson) => Ingredient.fromJson(ingredientJson))
             .toList();
@@ -154,6 +180,7 @@ class DetailedRecipe {
       recipe: recipe,
       ingredients: json['ingredients'] ?? [],
       instructions: List<String>.from(json['instructions'] ?? []),
+			video_link: json['video_link'],
     );
   }
 }

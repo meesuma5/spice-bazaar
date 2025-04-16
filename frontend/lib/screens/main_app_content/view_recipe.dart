@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:spice_bazaar/constants.dart';
 import 'package:spice_bazaar/models/recipe.dart';
 import 'package:spice_bazaar/models/users.dart';
+import 'package:spice_bazaar/widgets/avatar_icon.dart';
+import 'package:spice_bazaar/widgets/custom_button.dart';
 import 'package:uicons/uicons.dart';
 import 'package:uicons_updated/uicons.dart';
 import 'package:http/http.dart' as http;
@@ -12,6 +14,8 @@ class RecipeDetailContent extends StatefulWidget {
   final Recipe recipe;
   final VoidCallback onBack;
   final User user;
+	final Function(Recipe recipe) onEdit;
+	final Function(Recipe recipe) onDelete;
   // Constructor to initialize the recipe and the back function
 
   const RecipeDetailContent({
@@ -19,6 +23,8 @@ class RecipeDetailContent extends StatefulWidget {
     required this.recipe,
     required this.onBack,
     required this.user,
+		required this.onEdit,
+		required this.onDelete,
   });
 
   @override
@@ -64,42 +70,96 @@ class _RecipeDetailContentState extends State<RecipeDetailContent> {
       slivers: [
         // Hero Image
         SliverToBoxAdapter(
-          child: SizedBox(
-            height: 300,
-            width: double.infinity,
-            child: Image.network(
-              widget.recipe.image ?? baseRecipeImageLink,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-
-        // Recipe Title and Bookmark
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.recipe.title,
-                    style: poppins(
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                height: 240,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage(
+                    image: NetworkImage(
+                      widget.recipe.image ?? baseRecipeImageLink,
                     ),
+                    fit: BoxFit.cover,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(UIcons.regularRounded.bookmark),
-                  onPressed: () {},
+                child: detailedRecipe != null &&
+                        recipe.author == widget.user.username
+                    ? Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            AvatarIcon(
+                              size: 45,
+                              icon: UiconsRegular.bookmark,
+                              onTap: () {},
+                              backgroundColor: Colors.grey[100]!,
+                              iconColor: Colors.black87,
+                              iconSize: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            CustomButton(
+                                vPad: 12,
+                                hPad: 12,
+                                buttonColor: Colors.grey[100],
+                                text: 'Edit Recipe',
+                                onPressed: () => widget.onEdit(recipe),
+                                textStyle: const TextStyle(
+                                    color: Colors.black87,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500),
+                                icon: const Icon(UiconsRegular.pencil,
+                                    color: Colors.black87, size: 18)),
+                            const SizedBox(width: 8),
+                            CustomButton(
+                              vPad: 12,
+                              hPad: 12,
+                              buttonColor: Colors.red,
+                              text: 'Delete',
+                              color: Colors.white,
+                              textStyle: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500),
+                              onPressed: () => widget.onDelete(recipe),
+                              icon: const Icon(UiconsRegular.trash,
+                                  color: Colors.white, size: 18),
+                            ),
+                          ],
+                        ),
+                      )
+                    : null,
+              ),
+            ),),
+            // Recipe Title and Bookmark
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.recipe.title,
+                        style: poppins(
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(UIcons.regularRounded.bookmark),
+                      onPressed: () {},
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
 
         // Recipe Info Tags
         SliverToBoxAdapter(

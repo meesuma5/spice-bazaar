@@ -28,8 +28,8 @@ class ProfileDrawer extends StatelessWidget {
               child: CircleAvatar(
                 radius: 40,
                 backgroundImage: NetworkImage(
-                  user.profileImageUrl ??
-                      baseProfileImageLink, // Sample avatar image
+                  user.profileImageUrl == '' ?
+                      baseProfileImageLink : user.profileImageUrl ?? baseProfileImageLink, // Sample avatar image
                 ),
               ),
             ),

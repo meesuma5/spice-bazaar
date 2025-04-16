@@ -16,18 +16,20 @@ class MyRecipesContent extends StatefulWidget {
   final Function({Recipe? recipeToEdit})
       showAddRecipe; // Function to show add recipe screen
   final Function(Recipe) onRecipeSelected;
+  final Function(Recipe) deleteRecipe;
   const MyRecipesContent({
     super.key,
     required this.showAddRecipe,
     required this.user,
     required this.onRecipeSelected,
+    required this.deleteRecipe,
   });
 
   @override
-  State<MyRecipesContent> createState() => _MyRecipesContentState();
+  State<MyRecipesContent> createState() => MyRecipesContentState();
 }
 
-class _MyRecipesContentState extends State<MyRecipesContent> {
+class MyRecipesContentState extends State<MyRecipesContent> {
   List<Recipe> userRecipes = [];
   bool isLoading = true;
   String? errorMessage;
@@ -35,10 +37,12 @@ class _MyRecipesContentState extends State<MyRecipesContent> {
   @override
   void initState() {
     super.initState();
-    _fetchUserRecipes();
+    print('starting MyRecipesContent');
+    print('User: ${widget.user.username}'); // Debugging line
+    fetchUserRecipes();
   }
 
-  Future<void> _fetchUserRecipes() async {
+  void fetchUserRecipes() async {
     try {
       print('Auth Token: ${widget.user.accessToken}'); // Debugging line
       final response =
@@ -143,13 +147,11 @@ class _MyRecipesContentState extends State<MyRecipesContent> {
                               ))
                           : Padding(
                               padding: const EdgeInsets.only(bottom: 16.0),
-                              child: UserRecipeCard(
+                              child: RecipeCard(
                                 onTap: widget.onRecipeSelected,
                                 recipe: userRecipes[index - 1],
-                                onEdit: () =>
-                                    _editRecipe(userRecipes[index - 1]),
-                                onDelete: () => _deleteRecipe(
-                                    userRecipes[index - 1].recipeId),
+                                onEdit: _editRecipe,
+                                onDelete: widget.deleteRecipe,
                               ),
                             );
                     },
@@ -217,33 +219,5 @@ class _MyRecipesContentState extends State<MyRecipesContent> {
   void _editRecipe(Recipe recipe) {
     // Use the passed function to show edit screen
     widget.showAddRecipe(recipeToEdit: recipe);
-  }
-
-  Future<void> _deleteRecipe(String id) async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Recipe'),
-        content: const Text('Are you sure you want to delete this recipe?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      // For demo, just remove from the list
-      setState(() {
-        userRecipes.removeWhere((recipe) => recipe.recipeId == id);
-      });
-    }
   }
 }

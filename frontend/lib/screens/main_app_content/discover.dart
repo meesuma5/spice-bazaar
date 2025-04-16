@@ -10,36 +10,36 @@ import 'dart:convert';
 
 class DiscoverContent extends StatefulWidget {
   final Function(Recipe) onRecipeSelected;
-	final User user; // User object to fetch recipes of
+  final User user; // User object to fetch recipes of
 
   const DiscoverContent({
     super.key,
     required this.onRecipeSelected,
-		required this.user,
+    required this.user,
   });
 
   @override
-  State<DiscoverContent> createState() => _DiscoverContentState();
+  State<DiscoverContent> createState() => DiscoverContentState();
 }
 
-class _DiscoverContentState extends State<DiscoverContent> {
+class DiscoverContentState extends State<DiscoverContent> {
   List<Recipe> recipes = [];
   bool isLoading = true;
   String? errorMessage;
-  late List<dynamic> recipeList;
+  List<dynamic>? recipeList;
 
   @override
   void initState() {
     super.initState();
-    _fetchRecipes();
+    fetchRecipes();
   }
 
-  Future<void> _fetchRecipes() async {
+  void fetchRecipes() async {
     try {
       final response =
           await http.get(Uri.parse('$baseUrl/api/recipes/catalog/'), headers: {
-						'Authorization': 'Bearer ${widget.user.accessToken}',
-					});
+        'Authorization': 'Bearer ${widget.user.accessToken}',
+      });
 
       // Check if response is valid before proceeding
       if (response.statusCode == 200) {
@@ -75,7 +75,7 @@ class _DiscoverContentState extends State<DiscoverContent> {
             ? Center(child: Text(errorMessage!))
             : ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: recipes.length + 1,
+                itemCount: recipes.length,
                 itemBuilder: (context, index) {
                   return index == 0
                       ? Padding(
@@ -103,6 +103,7 @@ class _DiscoverContentState extends State<DiscoverContent> {
                       : Padding(
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: RecipeCard(
+                              key: ValueKey(recipes[index - 1].recipeId),
                               recipe: recipes[index - 1],
                               onTap: widget.onRecipeSelected),
                         );

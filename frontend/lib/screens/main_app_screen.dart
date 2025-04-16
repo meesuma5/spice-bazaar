@@ -4,8 +4,8 @@ import 'package:spice_bazaar/constants.dart';
 import 'package:spice_bazaar/models/profile_drawer.dart';
 import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/screens/main_app_content/add_recipe.dart';
-import 'package:spice_bazaar/screens/main_app_content/discover.dart';
-import 'package:spice_bazaar/screens/main_app_content/my_recipes.dart';
+import 'package:spice_bazaar/screens/main_app_content/my_recipes.dart' show MyRecipesContent, MyRecipesContentState;
+import 'package:spice_bazaar/screens/main_app_content/discover.dart' show DiscoverContent, DiscoverContentState;
 import 'package:spice_bazaar/screens/main_app_content/view_recipe.dart';
 import 'package:spice_bazaar/widgets/bottom_nav_bar.dart';
 import 'package:spice_bazaar/models/recipe.dart';
@@ -27,6 +27,10 @@ class MainAppScreen extends StatefulWidget {
 
 class _MainAppScreenState extends State<MainAppScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<MyRecipesContentState> _myRecipesKey =
+      GlobalKey<MyRecipesContentState>();
+  final GlobalKey<DiscoverContentState> _discoverKey =
+      GlobalKey<DiscoverContentState>();
   int _currentIndex = 1; // Start with My Recipes (index 0)
   late User _user;
 
@@ -50,6 +54,18 @@ class _MainAppScreenState extends State<MainAppScreen> {
     super.dispose();
   }
 
+  void _refreshAllData() {
+    // Refresh My Recipes content
+    if (_myRecipesKey.currentState != null) {
+      _myRecipesKey.currentState!.fetchUserRecipes();
+    }
+
+    // Refresh Discover content
+    if (_discoverKey.currentState != null) {
+      _discoverKey.currentState!.fetchRecipes();
+    }
+  }
+
   void _onNavItemTapped(int index) {
     setState(() {
       print(index);
@@ -69,7 +85,20 @@ class _MainAppScreenState extends State<MainAppScreen> {
     });
   }
 
+  void hideAddRecipe({bool recipeAdded = false}) {
+    setState(() {
+      _showingAddRecipe = false;
+      _recipeToEdit = null;
+      
+      // If a recipe was added or edited, refresh data
+      if (recipeAdded) {
+        _refreshAllData();
+      }
+    });
+  }
+
   void showRecipeDetail(Recipe recipe) {
+    print('Showing recipe detail for: ${recipe.title}');
     setState(() {
       _showingRecipeDetail = true;
       _selectedRecipe = recipe;
@@ -81,6 +110,62 @@ class _MainAppScreenState extends State<MainAppScreen> {
       _showingRecipeDetail = false;
       _selectedRecipe = null;
     });
+  }
+
+  void editRecipe(Recipe recipe) {
+    print("editing recipe: ${recipe.title}");
+    setState(() {
+      _showingAddRecipe = true;
+      _recipeToEdit = recipe;
+      _showingRecipeDetail = false;
+    });
+  }
+
+  void deleteRecipe(Recipe recipe) {
+    // Show confirmation dialog
+    showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Recipe', style: poppins()),
+        content: Text('Are you sure you want to delete this recipe?',
+            style: poppins()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    ).then((confirmed) {
+      if (confirmed == true) {
+        http.delete(
+            Uri.parse('$baseUrl/api/recipes/delete/${recipe.recipeId}/'),
+            headers: {
+              'Authorization': 'Bearer ${_user.accessToken}',
+            });
+        setState(() {
+          // Remove the recipe from the list
+
+          _showingRecipeDetail = false;
+          _showingAddRecipe = false;
+          _selectedRecipe = null;
+          _recipeToEdit = null;
+        });
+        _refreshAllData();
+      }
+    });
+  }
+
+  void showProfileDrawer() {
+    _scaffoldKey.currentState?.openDrawer();
+  }
+
+  void hideProfileDrawer() {
+    _scaffoldKey.currentState?.closeDrawer();
   }
 
   @override
@@ -138,22 +223,32 @@ class _MainAppScreenState extends State<MainAppScreen> {
         elevation: 1,
       ),
       body: _showingAddRecipe
-          ? const AddRecipeContent() // Show Add Recipe when flag is set
-          : _showingRecipeDetail
+          ? AddRecipeContent(
+
+              user: _user,
+              recipeToEdit: _recipeToEdit,
+               back: () => hideAddRecipe(),
+              onRecipeAdded: () => hideAddRecipe(recipeAdded: true), // Show Add Recipe when flag is set
+					): _showingRecipeDetail
               ? RecipeDetailContent(
                   user: _user,
                   recipe: _selectedRecipe!,
                   onBack: hideRecipeDetail,
+                  onEdit: editRecipe,
+                  onDelete: deleteRecipe,
                 )
               : IndexedStack(
                   index: _currentIndex,
                   children: [
                     MyRecipesContent(
+											key: _myRecipesKey,
                       showAddRecipe: showAddRecipe,
-                      user: _user,
                       onRecipeSelected: showRecipeDetail, // Add this callback
+                      deleteRecipe: deleteRecipe,
+                      user: _user,
                     ),
                     DiscoverContent(
+											key: _discoverKey,
                       user: _user,
                       onRecipeSelected: showRecipeDetail, // Add this callback
                     ),

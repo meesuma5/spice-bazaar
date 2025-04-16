@@ -6,8 +6,7 @@ const lighterPurple = Color(0xFFF4EDFE);
 const borderGray = Color(0xFFE5E7EB);
 const halfOpacityGray = Color(0x77E5E7EB);
 const baseUrl = 'http://127.0.0.1:8000';
-const baseProfileImageLink =
-    "https://firebasestorage.googleapis.com/v0/b/chateo-72766.appspot.com/o/freepik__silhouette-of-a-hispanic-male-chef-in-a-bustling-r__45380.jpeg?alt=media&token=7043f273-ec2c-4feb-bbbc-aca258b3768c";
+const baseProfileImageLink = "https://firebasestorage.googleapis.com/v0/b/chateo-72766.appspot.com/o/freepik__silhouette-of-a-hispanic-male-chef-in-a-bustling-r__45380.jpeg?alt=media&token=7043f273-ec2c-4feb-bbbc-aca258b3768c";
 
 const baseRecipeImageLink =	"https://firebasestorage.googleapis.com/v0/b/chateo-72766.appspot.com/o/freepik__the-style-is-3d-model-with-octane-render-volumetri__20092.png?alt=media&token=7f4c99b7-e092-4e7c-b2b8-865138c2ea4f";
 
