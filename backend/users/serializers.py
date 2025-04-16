@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import Users
+from .models import Bookmarks
+from recipes.models import Recipes
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -72,3 +74,40 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             instance.set_password(new_password)
         instance.save()
         return instance
+
+
+class BookmarkCreateSerializer(serializers.ModelSerializer):
+    recipe_id = serializers.UUIDField(write_only=True, required=True)
+    
+    class Meta:
+        model = Bookmarks
+        fields = ['bookmark_id', 'recipe_id', 'bookmark_date']
+        read_only_fields = ['bookmark_id', 'bookmark_date']
+        
+    def validate_recipe_id(self, value):
+        try:
+            recipe = Recipes.objects.get(recipe_id=value)
+        except Recipes.DoesNotExist:
+            raise serializers.ValidationError("Recipe does not exist.")
+        return value
+    
+    def validate(self, data):
+        user = self.context['request'].user
+        recipe_id = data['recipe_id']
+        
+        if self.context['request'].method == 'POST' and Bookmarks.objects.filter(user=user, recipe_id=recipe_id).exists():
+            raise serializers.ValidationError("You have already bookmarked this recipe")
+            
+        return data
+    
+    def create(self, validated_data):
+        recipe_id = validated_data.pop('recipe_id')
+        user = self.context['request'].user 
+        
+        bookmark = Bookmarks.objects.create(user=user, recipe_id=recipe_id)
+        return bookmark
+    
+    
+class BookmarkDeleteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookmarks

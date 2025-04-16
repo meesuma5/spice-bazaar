@@ -1,11 +1,11 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Users, Bookmarks
 from recipes.models import Recipes
-from .serializers import RegisterSerializer, LoginSerializer, UserUpdateSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserUpdateSerializer, BookmarkCreateSerializer, BookmarkDeleteSerializer
 
 
 class RegisterView(generics.CreateAPIView):
@@ -46,3 +46,28 @@ class UserUpdateView(generics.UpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class BookmarkCreateView(generics.CreateAPIView):
+    serializer_class = BookmarkCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save()
+        
+        
+class BookmarkDeleteView(generics.DestroyAPIView):
+    serializer_class = BookmarkDeleteSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'recipe_id'
+    
+    def get_queryset(self): # allow only the user who created the bookmark to delete it
+        return Bookmarks.objects.filter(user=self.request.user)
+    
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response({"message": "Bookmark deleted successfully."}, status=status.HTTP_200_OK)
+        except:
+            return Response({"error": "Bookmark not found."}, status=status.HTTP_404_NOT_FOUND)

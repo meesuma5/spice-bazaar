@@ -10,11 +10,12 @@ class RecipeCatalogSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
     time = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
+    is_bookmarked = serializers.SerializerMethodField()
     
     class Meta:
         model = Recipes
         # coming from the models
-        fields = ['recipe_id', 'title', 'description', 'tags', 'time', 'upload_date', 'author', 'image']
+        fields = ['recipe_id', 'title', 'description', 'tags', 'time', 'upload_date', 'author', 'image', 'is_bookmarked']
     
     def get_tags(self, obj):
     
@@ -43,6 +44,17 @@ class RecipeCatalogSerializer(serializers.ModelSerializer):
     
     def get_author(self, obj):
         return obj.user.username if obj.user else None
+    
+    def get_is_bookmarked(self, obj):
+        # If the object has the annotation, use it
+        if hasattr(obj, 'is_bookmarked'):
+            return obj.is_bookmarked
+        
+        # Fall back to the original method if annotation isn't present
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return Bookmarks.objects.filter(user=request.user, recipe=obj).exists()
+        return False
 
 
 class ReviewBriefSerializer(serializers.ModelSerializer):
