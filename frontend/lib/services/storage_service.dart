@@ -12,7 +12,7 @@ class StorageService {
       return downloadUrl;
     } catch (e) {
       print('Error uploading file: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -22,7 +22,7 @@ class StorageService {
       return await _storage.ref(path).getDownloadURL();
     } catch (e) {
       print('Error getting download URL: $e');
-      throw e;
+      rethrow;
     }
   }
 
@@ -32,7 +32,7 @@ class StorageService {
       await _storage.ref(path).delete();
     } catch (e) {
       print('Error deleting file: $e');
-      throw e;
+      rethrow;
     }
   }
 }

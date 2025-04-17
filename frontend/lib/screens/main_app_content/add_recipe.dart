@@ -688,7 +688,7 @@ class _AddRecipeContentState extends State<AddRecipeContent> {
                 ),
               ],
             );
-          }).toList(),
+          }),
 
           const SizedBox(height: 16),
 
@@ -863,7 +863,7 @@ class _AddRecipeContentState extends State<AddRecipeContent> {
                 ],
               ),
             );
-          }).toList(),
+          }),
 
           const SizedBox(height: 16),
 

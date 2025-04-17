@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:spice_bazaar/widgets/avatar_icon.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/feature_card.dart';

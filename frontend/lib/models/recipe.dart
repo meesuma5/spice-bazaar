@@ -1,4 +1,5 @@
 import 'package:spice_bazaar/models/ingredient.dart';
+import 'package:spice_bazaar/models/reviews.dart';
 
 class Recipe {
   final String recipeId;
@@ -56,8 +57,8 @@ class Recipe {
 
   String get formattedPrepTime {
     // Check if prepTime is in minutes (integer) or time format (HH:MM:SS)
-    var hours;
-    var minutes;
+    int hours;
+    int minutes;
     if (RegExp(r'^\d+$').hasMatch(prepTime)) {
       // It's an integer (minutes)
       hours = int.parse(prepTime) ~/ 60;
@@ -81,10 +82,11 @@ class Recipe {
   }
 
   String get formattedCookTime {
-    if (cookTime == null || cookTime!.isEmpty)
+    if (cookTime == null || cookTime!.isEmpty) {
       return 'N/A'; // Handle null or empty cook time
-    var hours;
-    var minutes;
+    }
+    int hours;
+    int minutes;
     // Check if cookTime is in minutes (integer) or time format (HH:MM:SS)
     if (RegExp(r'^\d+$').hasMatch(cookTime!)) {
       // It's an integer (minutes)
@@ -160,8 +162,9 @@ class Recipe {
   }
 
   String getCookTimeInMinutes() {
-    if (cookTime == null || cookTime!.isEmpty)
+    if (cookTime == null || cookTime!.isEmpty) {
       return '0'; // Handle null or empty cook time
+    }
     if (RegExp(r'^\d+$').hasMatch(cookTime!)) {
       // It's an integer (minutes)
       return (int.parse(cookTime!)).toString();
@@ -179,11 +182,13 @@ class DetailedRecipe {
   final List<Ingredient> ingredients;
   final List<String> instructions;
   final String? video_link;
+  List<Reviews>? reviews;
   DetailedRecipe({
     required this.recipe,
     required List<dynamic> ingredients,
     required this.instructions,
     this.video_link,
+    this.reviews,
   }) : ingredients = ingredients
             .map((ingredientJson) => Ingredient.fromJson(ingredientJson))
             .toList();
@@ -193,6 +198,33 @@ class DetailedRecipe {
       ingredients: json['ingredients'] ?? [],
       instructions: List<String>.from(json['instructions'] ?? []),
       video_link: json['video_link'],
+      reviews: json['reviews'] != null
+          ? (json['reviews'] as List)
+              .map((reviewJson) => Reviews.fromJson(reviewJson))
+              .toList()
+          : [],
     );
   }
+	void addReview(Reviews review) {
+		reviews ??= [];
+		reviews!.add(review);
+	}
+
+	void updateReview(Reviews review) {
+		if (reviews != null) {
+			int index = reviews!.indexWhere((r) => r.id == review.id);
+			if (index != -1) {
+				reviews![index] = review;
+			}
+		}
+	}
+	void removeReview(Reviews review) {
+		if (reviews != null) {
+			reviews!.remove(review);
+		}
+	}
+
+
+
+	
 }

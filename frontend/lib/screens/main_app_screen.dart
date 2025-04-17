@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:spice_bazaar/constants.dart';
 import 'package:spice_bazaar/models/profile_drawer.dart';
+import 'package:spice_bazaar/models/unit_conversion.dart';
 import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/screens/main_app_content/add_recipe.dart';
 import 'package:spice_bazaar/screens/main_app_content/my_recipes.dart'
@@ -12,7 +13,6 @@ import 'package:spice_bazaar/screens/main_app_content/view_recipe.dart';
 import 'package:spice_bazaar/widgets/bottom_nav_bar.dart';
 import 'package:spice_bazaar/models/recipe.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:uicons/uicons.dart';
 
 class MainAppScreen extends StatefulWidget {
@@ -167,44 +167,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
     });
   }
 
-  // void deleteRecipe(Recipe recipe) {
-  //   // Show confirmation dialog
-  //   showDialog<bool>(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: Text('Delete Recipe', style: poppins()),
-  //       content: Text('Are you sure you want to delete this recipe?',
-  //           style: poppins()),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.of(context).pop(false),
-  //           child: const Text('Cancel'),
-  //         ),
-  //         TextButton(
-  //           onPressed: () => Navigator.of(context).pop(true),
-  //           child: const Text('Delete', style: TextStyle(color: Colors.red)),
-  //         ),
-  //       ],
-  //     ),
-  //   ).then((confirmed) {
-  //     if (confirmed == true) {
-  //       http.delete(
-  //           Uri.parse('$baseUrl/api/recipes/delete/${recipe.recipeId}/'),
-  //           headers: {
-  //             'Authorization': 'Bearer ${_user.accessToken}',
-  //           });
-  //       setState(() {
-  //         // Remove the recipe from the list
-
-  //         _showingRecipeDetail = false;
-  //         _showingAddRecipe = false;
-  //         _selectedRecipe = null;
-  //         _recipeToEdit = null;
-  //       });
-  //       _refreshAllData();
-  //     }
-  //   });
-  // }
 
   void deleteRecipe(Recipe recipe) {
     showDialog<bool>(
@@ -293,15 +255,24 @@ class _MainAppScreenState extends State<MainAppScreen> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
+
   void hideProfileDrawer() {
     _scaffoldKey.currentState?.closeDrawer();
   }
+
+	void showUnitConverterDrawer(){
+		_scaffoldKey.currentState?.openEndDrawer();
+	}
+	void hideUnitConverterDrawer(){
+		_scaffoldKey.currentState?.closeEndDrawer();
+	}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       drawer: ProfileDrawer(user: _user),
+			endDrawer: const UnitConverterDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -346,7 +317,10 @@ class _MainAppScreenState extends State<MainAppScreen> {
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
         actions: [
-          Icon(UIcons.regularRounded.equality),
+					IconButton(
+                icon: Icon(UIcons.regularRounded.equality),
+                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+              ),
           const SizedBox(width: 16),
         ],
         elevation: 1,

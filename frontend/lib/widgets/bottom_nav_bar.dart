@@ -13,11 +13,11 @@ class BottomNavBar extends StatelessWidget {
   final VoidCallback onAddRecipe; // New callback for Add Recipe button
 
   const BottomNavBar({
-    Key? key,
+    super.key,
     required this.index,
     required this.onTap,
     required this.onAddRecipe,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

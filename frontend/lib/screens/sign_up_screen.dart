@@ -28,7 +28,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _agreedToTerms = false;
   String? _errorMessage;
   String? _imageUrl;
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   void initState() {
