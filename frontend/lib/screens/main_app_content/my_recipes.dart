@@ -17,12 +17,14 @@ class MyRecipesContent extends StatefulWidget {
       showAddRecipe; // Function to show add recipe screen
   final Function(Recipe) onRecipeSelected;
   final Function(Recipe) deleteRecipe;
+	final Function(Recipe) onBookmark;
   const MyRecipesContent({
     super.key,
     required this.showAddRecipe,
     required this.user,
     required this.onRecipeSelected,
     required this.deleteRecipe,
+		required this.onBookmark,
   });
 
   @override
@@ -148,6 +150,7 @@ class MyRecipesContentState extends State<MyRecipesContent> {
                           : Padding(
                               padding: const EdgeInsets.only(bottom: 16.0),
                               child: RecipeCard(
+																onBookmark: widget.onBookmark,
                                 onTap: widget.onRecipeSelected,
                                 recipe: userRecipes[index - 1],
                                 onEdit: _editRecipe,

@@ -1,35 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:spice_bazaar/models/recipe.dart';
 import 'package:spice_bazaar/constants.dart';
+import 'package:spice_bazaar/widgets/favourite_button.dart';
 import 'package:uicons_updated/icons/uicons_regular.dart';
+import 'package:uicons_updated/uicons.dart';
 
-class RecipeCard extends StatelessWidget {
+class RecipeCard extends StatefulWidget {
   final Recipe recipe;
   final Function(Recipe) onTap;
   final Function(Recipe)? onEdit;
   final Function(Recipe)? onDelete;
+  final Function(Recipe) onBookmark;
 
   const RecipeCard({
     super.key,
     required this.recipe,
     required this.onTap,
+    required this.onBookmark,
     this.onEdit,
     this.onDelete,
   });
 
   @override
+  State<RecipeCard> createState() => _RecipeCardState();
+}
+
+class _RecipeCardState extends State<RecipeCard> {
+  @override
   Widget build(BuildContext context) {
     // For demo purposes, use a placeholder image
-    String imageUrl = recipe.image ?? baseRecipeImageLink;
+    String imageUrl =
+        widget.recipe.image != null && widget.recipe.image!.isNotEmpty
+            ? widget.recipe.image!
+            : baseRecipeImageLink;
 
     // Get cuisine type from the first tag
     String cuisineType = "";
-    if (recipe.tags.isNotEmpty) {
-      List<String> words = recipe.tags[0].split(' ');
+    if (widget.recipe.tags.isNotEmpty) {
+      List<String> words = widget.recipe.tags[0].split(' ');
       if (words.length > 1) {
         cuisineType = words.sublist(0, words.length - 1).join(' ');
       } else {
-        cuisineType = recipe.tags[0]; // If there's only one word, return that
+        cuisineType =
+            widget.recipe.tags[0]; // If there's only one word, return that
       }
     }
 
@@ -53,11 +66,18 @@ class RecipeCard extends StatelessWidget {
               imageUrl,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: Icon(Icons.restaurant, size: 64, color: Colors.grey),
-                  ),
+                return Image.network(
+                  baseRecipeImageLink,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.restaurant,
+                            size: 64, color: Colors.grey),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -69,7 +89,7 @@ class RecipeCard extends StatelessWidget {
               children: [
                 // Recipe Title
                 Text(
-                  recipe.title,
+                  widget.recipe.title,
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -79,7 +99,7 @@ class RecipeCard extends StatelessWidget {
 
                 // Cuisine and Author
                 Text(
-                  "$cuisineType cuisine by ${recipe.author}",
+                  "$cuisineType cuisine by ${widget.recipe.author}",
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -89,9 +109,9 @@ class RecipeCard extends StatelessWidget {
 
                 // Description
                 Text(
-                  recipe.description.length > 200
-                      ? '${recipe.description.substring(0, 200)}...'
-                      : recipe.description,
+                  widget.recipe.description.length > 200
+                      ? '${widget.recipe.description.substring(0, 200)}...'
+                      : widget.recipe.description,
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[800],
@@ -109,7 +129,7 @@ class RecipeCard extends StatelessWidget {
                             size: 16, color: Colors.grey[600]),
                         const SizedBox(width: 4),
                         Text(
-                          recipe.formattedPrepTime,
+                          widget.recipe.formattedPrepTime,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -126,7 +146,8 @@ class RecipeCard extends StatelessWidget {
                             size: 16, color: Colors.grey[600]),
                         const SizedBox(width: 4),
                         Text(
-                          _getDifficultyLevel(int.parse(recipe.prepTime)),
+                          _getDifficultyLevel(
+                              int.parse(widget.recipe.prepTime)),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
@@ -144,7 +165,7 @@ class RecipeCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     OutlinedButton(
-                      onPressed: () => onTap(recipe),
+                      onPressed: () => widget.onTap(widget.recipe),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.grey),
                         shape: RoundedRectangleBorder(
@@ -157,28 +178,34 @@ class RecipeCard extends StatelessWidget {
                             style: const TextStyle(color: Colors.black87)),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.bookmark_border),
-                      onPressed: () {
-                        // Toggle bookmark
-                      },
+                    Row(
+											mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FavouriteButton(
+                            recipe: widget.recipe,
+                            onBookmark: widget.onBookmark,
+                            inactiveColor: Colors.grey,
+                            size: 24),
+                        if (widget.onEdit != null)
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () => widget.onEdit!(widget.recipe),
+                                icon: const Icon(Icons.edit),
+                                tooltip: 'Edit Recipe',
+                              ),
+															const SizedBox(width: 2),
+                              IconButton(
+                                onPressed: () =>
+                                    widget.onDelete!(widget.recipe),
+                                icon: const Icon(Icons.delete_outline,
+                                    color: Colors.red),
+                                tooltip: 'Delete Recipe',
+                              ),
+                            ],
+                          ),
+                      ],
                     ),
-                    if (onEdit != null)
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => onEdit!(recipe),
-                            icon: const Icon(Icons.edit),
-                            tooltip: 'Edit Recipe',
-                          ),
-                          IconButton(
-                            onPressed: () => onDelete!(recipe),
-                            icon: const Icon(Icons.delete_outline,
-                                color: Colors.red),
-                            tooltip: 'Delete Recipe',
-                          ),
-                        ],
-                      ),
                   ],
                 ),
               ],
@@ -207,139 +234,3 @@ class RecipeCard extends StatelessWidget {
     return likes.toString();
   }
 }
-
-// Extended RecipeCard with edit and delete options
-// class UserRecipeCard extends RecipeCard {
-//   final Function() onEdit;
-//   final Function() onDelete;
-
-//   const UserRecipeCard({
-//     required super.recipe,
-//     required this.onEdit,
-//     required this.onDelete,
-//     required super.onTap,
-//     super.key,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(16),
-//         boxShadow: [
-//           BoxShadow(
-//             color: Colors.black.withOpacity(0.05),
-//             blurRadius: 10,
-//             offset: const Offset(0, 4),
-//           ),
-//         ],
-//       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           // Image Section
-//           ClipRRect(
-//             borderRadius: const BorderRadius.only(
-//               topLeft: Radius.circular(16),
-//               topRight: Radius.circular(16),
-//             ),
-//             child: // In your RecipeCard widget
-//                 Image.network(
-//               recipe.image ?? baseRecipeImageLink,
-//               // Or use a conditional:
-//               // recipe.image != null ? recipe.image! : AssetImage('assets/placeholder.jpg'),
-//               height: 200,
-//               width: double.infinity,
-//               fit: BoxFit.cover,
-//               errorBuilder: (context, error, stackTrace) {
-//                 return Container(
-//                   height: 200,
-//                   color: Colors.grey[300],
-//                   child: const Center(
-//                     child: Icon(Icons.image_not_supported, size: 50),
-//                   ),
-//                 );
-//               },
-//             ),
-//           ),
-
-//           // Content Section
-//           Padding(
-//             padding: const EdgeInsets.all(16.0),
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Text(
-//                   recipe.title,
-//                   style: const TextStyle(
-//                     fontSize: 22,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//                 const SizedBox(height: 4),
-//                 Text(
-//                   '${recipe.tags.isNotEmpty ? recipe.tags.first : "Other"} cuisine',
-//                   style: TextStyle(
-//                     color: Colors.grey[600],
-//                   ),
-//                 ),
-//                 const SizedBox(height: 8),
-//                 Text(recipe.description),
-//                 const SizedBox(height: 16),
-//                 Row(
-//                   children: [
-//                     const Icon(Icons.access_time, size: 20),
-//                     const SizedBox(width: 4),
-//                     Text(
-//                         'Prep: ${recipe.formattedPrepTime} Cook: ${recipe.formattedCookTime}'),
-//                   ],
-//                 ),
-//               ],
-//             ),
-//           ),
-
-//           // Buttons Section
-//           Padding(
-//             padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-//             child: Row(
-//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//               children: [
-//                 OutlinedButton(
-//                   onPressed: () {
-//                     super.onTap(recipe);
-//                   },
-//                   style: OutlinedButton.styleFrom(
-//                     side: const BorderSide(color: Colors.grey),
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(8),
-//                     ),
-//                   ),
-//                   child: Text(
-//                     'View Recipe',
-//                     style:
-//                         poppins(style: const TextStyle(color: Colors.black87)),
-//                   ),
-//                 ),
-//                 Row(
-//                   children: [
-//                     IconButton(
-//                       onPressed: onEdit,
-//                       icon: const Icon(Icons.edit),
-//                       tooltip: 'Edit Recipe',
-//                     ),
-//                     IconButton(
-//                       onPressed: onDelete,
-//                       icon: const Icon(Icons.delete_outline, color: Colors.red),
-//                       tooltip: 'Delete Recipe',
-//                     ),
-//                   ],
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

@@ -10,6 +10,7 @@ class Recipe {
   final String uploadDate;
   final String author;
   final String? image; // Mark as nullable with ?
+  bool isBookmarked;
 
   Recipe({
     required this.recipeId,
@@ -19,22 +20,25 @@ class Recipe {
     required this.prepTime,
     required this.uploadDate,
     required this.author,
+    required this.isBookmarked,
     this.cookTime, // Optional cook time
     this.image, // Handle nullable image
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
     return Recipe(
-      recipeId: json['recipe_id'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      tags: List<String>.from(json['tags'] ?? []),
-      prepTime: json['time'].toString(),
-      cookTime: json['cook_time'].toString(),
-      uploadDate: json['upload_date'] ?? '',
-      author: json['author'] ?? '',
-      image: json['image'], // No default needed as it's nullable
-    );
+        recipeId: json['recipe_id'] ?? '',
+        title: json['title'] ?? '',
+        description: json['description'] ?? '',
+        tags: List<String>.from(json['tags'] ?? []),
+        prepTime: json['time'].toString(),
+        cookTime: json['cook_time'].toString(),
+        uploadDate: json['upload_date'] ?? '',
+        author: json['author'] ?? '',
+        image: json['image'],
+        isBookmarked:
+            json["is_bookmarked"] // No default needed as it's nullable
+        );
   }
   Map<String, dynamic> toJson() {
     return {
@@ -52,8 +56,8 @@ class Recipe {
 
   String get formattedPrepTime {
     // Check if prepTime is in minutes (integer) or time format (HH:MM:SS)
-		var hours;
-		var minutes;
+    var hours;
+    var minutes;
     if (RegExp(r'^\d+$').hasMatch(prepTime)) {
       // It's an integer (minutes)
       hours = int.parse(prepTime) ~/ 60;
@@ -123,6 +127,7 @@ class Recipe {
     String? uploadDate,
     String? author,
     String? image,
+    bool? isBookmarked,
   }) {
     return Recipe(
       recipeId: recipeId ?? this.recipeId,
@@ -134,44 +139,51 @@ class Recipe {
       uploadDate: uploadDate ?? this.uploadDate,
       author: author ?? this.author,
       image: image ?? this.image,
+      isBookmarked: isBookmarked ?? this.isBookmarked,
     );
   }
 
-	String getPrepTimeInMinutes(){
-		if (RegExp(r'^\d+$').hasMatch(prepTime)) {
-			// It's an integer (minutes)
-			return (int.parse(prepTime)).toString();
-		} else if (RegExp(r'^\d{2}:\d{2}:\d{2}$').hasMatch(prepTime)) {
-			// It's in time format HH:MM:SS
-			final parts = prepTime.split(':');
-			return (int.parse(parts[0]) * 60 + int.parse(parts[1])).toString();
-		}
-		return '0'; // Default to 0 if format is unknown
-	}
-	String getCookTimeInMinutes(){
-		if (cookTime == null || cookTime!.isEmpty) return '0'; // Handle null or empty cook time
-		if (RegExp(r'^\d+$').hasMatch(cookTime!)) {
-			// It's an integer (minutes)
-			return (int.parse(cookTime!)).toString();
-		} else if (RegExp(r'^\d{2}:\d{2}:\d{2}$').hasMatch(cookTime!)) {
-			// It's in time format HH:MM:SS
-			final parts = cookTime!.split(':');
-			return (int.parse(parts[0]) * 60 + int.parse(parts[1])).toString();
-		}
-		return '0'; // Default to 0 if format is unknown
-	}
+  void toggleBookmark() {
+    isBookmarked = !isBookmarked;
+  }
+
+  String getPrepTimeInMinutes() {
+    if (RegExp(r'^\d+$').hasMatch(prepTime)) {
+      // It's an integer (minutes)
+      return (int.parse(prepTime)).toString();
+    } else if (RegExp(r'^\d{2}:\d{2}:\d{2}$').hasMatch(prepTime)) {
+      // It's in time format HH:MM:SS
+      final parts = prepTime.split(':');
+      return (int.parse(parts[0]) * 60 + int.parse(parts[1])).toString();
+    }
+    return '0'; // Default to 0 if format is unknown
+  }
+
+  String getCookTimeInMinutes() {
+    if (cookTime == null || cookTime!.isEmpty)
+      return '0'; // Handle null or empty cook time
+    if (RegExp(r'^\d+$').hasMatch(cookTime!)) {
+      // It's an integer (minutes)
+      return (int.parse(cookTime!)).toString();
+    } else if (RegExp(r'^\d{2}:\d{2}:\d{2}$').hasMatch(cookTime!)) {
+      // It's in time format HH:MM:SS
+      final parts = cookTime!.split(':');
+      return (int.parse(parts[0]) * 60 + int.parse(parts[1])).toString();
+    }
+    return '0'; // Default to 0 if format is unknown
+  }
 }
 
 class DetailedRecipe {
   final Recipe recipe;
   final List<Ingredient> ingredients;
   final List<String> instructions;
-	final String? video_link;
+  final String? video_link;
   DetailedRecipe({
     required this.recipe,
     required List<dynamic> ingredients,
     required this.instructions,
-		this.video_link,
+    this.video_link,
   }) : ingredients = ingredients
             .map((ingredientJson) => Ingredient.fromJson(ingredientJson))
             .toList();
@@ -180,7 +192,7 @@ class DetailedRecipe {
       recipe: recipe,
       ingredients: json['ingredients'] ?? [],
       instructions: List<String>.from(json['instructions'] ?? []),
-			video_link: json['video_link'],
+      video_link: json['video_link'],
     );
   }
 }

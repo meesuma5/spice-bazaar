@@ -4,8 +4,10 @@ import 'package:spice_bazaar/constants.dart';
 import 'package:spice_bazaar/models/profile_drawer.dart';
 import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/screens/main_app_content/add_recipe.dart';
-import 'package:spice_bazaar/screens/main_app_content/my_recipes.dart' show MyRecipesContent, MyRecipesContentState;
-import 'package:spice_bazaar/screens/main_app_content/discover.dart' show DiscoverContent, DiscoverContentState;
+import 'package:spice_bazaar/screens/main_app_content/my_recipes.dart'
+    show MyRecipesContent, MyRecipesContentState;
+import 'package:spice_bazaar/screens/main_app_content/discover.dart'
+    show DiscoverContent, DiscoverContentState;
 import 'package:spice_bazaar/screens/main_app_content/view_recipe.dart';
 import 'package:spice_bazaar/widgets/bottom_nav_bar.dart';
 import 'package:spice_bazaar/models/recipe.dart';
@@ -89,7 +91,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
     setState(() {
       _showingAddRecipe = false;
       _recipeToEdit = null;
-      
+
       // If a recipe was added or edited, refresh data
       if (recipeAdded) {
         _refreshAllData();
@@ -112,6 +114,50 @@ class _MainAppScreenState extends State<MainAppScreen> {
     });
   }
 
+  void bookmarkRecipe(Recipe recipe) async {
+    final resp = await http.post(
+      Uri.parse('$baseUrl/api/acc/bookmark/'),
+      headers: {
+        'Authorization': 'Bearer ${_user.accessToken}',
+      },
+      body: {
+        'recipe_id': recipe.recipeId,
+      },
+    );
+    if (resp.statusCode == 201) {
+      print('Recipe bookmarked successfully');
+    } else {
+      print('Failed to bookmark recipe: ${resp.statusCode}');
+    }
+  }
+
+  void unbookmarkRecipe(Recipe recipe) async {
+    final resp = await http.delete(
+      Uri.parse('$baseUrl/api/acc/bookmark/${recipe.recipeId}/delete/'),
+      headers: {
+        'Authorization': 'Bearer ${_user.accessToken}',
+      },
+    );
+    if (resp.statusCode == 200) {
+      print('Recipe unbookmarked successfully');
+    } else {
+      print('Failed to unbookmark recipe: ${resp.statusCode}');
+    }
+  }
+
+  // Bookmark
+  void onBookmark(Recipe recipe) {
+    setState(() {
+      recipe.toggleBookmark();
+    });
+    if (recipe.isBookmarked) {
+      bookmarkRecipe(recipe);
+    } else {
+      unbookmarkRecipe(recipe);
+    }
+  }
+
+  // Function to edit a recipe
   void editRecipe(Recipe recipe) {
     print("editing recipe: ${recipe.title}");
     setState(() {
@@ -121,8 +167,46 @@ class _MainAppScreenState extends State<MainAppScreen> {
     });
   }
 
+  // void deleteRecipe(Recipe recipe) {
+  //   // Show confirmation dialog
+  //   showDialog<bool>(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text('Delete Recipe', style: poppins()),
+  //       content: Text('Are you sure you want to delete this recipe?',
+  //           style: poppins()),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.of(context).pop(false),
+  //           child: const Text('Cancel'),
+  //         ),
+  //         TextButton(
+  //           onPressed: () => Navigator.of(context).pop(true),
+  //           child: const Text('Delete', style: TextStyle(color: Colors.red)),
+  //         ),
+  //       ],
+  //     ),
+  //   ).then((confirmed) {
+  //     if (confirmed == true) {
+  //       http.delete(
+  //           Uri.parse('$baseUrl/api/recipes/delete/${recipe.recipeId}/'),
+  //           headers: {
+  //             'Authorization': 'Bearer ${_user.accessToken}',
+  //           });
+  //       setState(() {
+  //         // Remove the recipe from the list
+
+  //         _showingRecipeDetail = false;
+  //         _showingAddRecipe = false;
+  //         _selectedRecipe = null;
+  //         _recipeToEdit = null;
+  //       });
+  //       _refreshAllData();
+  //     }
+  //   });
+  // }
+
   void deleteRecipe(Recipe recipe) {
-    // Show confirmation dialog
     showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -140,22 +224,67 @@ class _MainAppScreenState extends State<MainAppScreen> {
           ),
         ],
       ),
-    ).then((confirmed) {
+    ).then((confirmed) async {
       if (confirmed == true) {
-        http.delete(
+        try {
+          final response = await http.delete(
             Uri.parse('$baseUrl/api/recipes/delete/${recipe.recipeId}/'),
             headers: {
               'Authorization': 'Bearer ${_user.accessToken}',
-            });
-        setState(() {
-          // Remove the recipe from the list
+            },
+          );
 
-          _showingRecipeDetail = false;
-          _showingAddRecipe = false;
-          _selectedRecipe = null;
-          _recipeToEdit = null;
-        });
-        _refreshAllData();
+          if (response.statusCode == 200 || response.statusCode == 204) {
+            setState(() {
+              _showingRecipeDetail = false;
+              _selectedRecipe = null;
+            });
+
+            // Force rebuilding by setting the current index again
+            setState(() {});
+
+            // Use Future.delayed to ensure the UI updates before we attempt to refresh data
+            // This gives Flutter time to dispose of any existing state
+            Future.delayed(const Duration(milliseconds: 100), () {
+              // Explicitly set to rebuild with fresh data
+              setState(() {
+                // Reset the current tab to force a complete rebuild
+                int currentTab = _currentIndex;
+                _currentIndex = -1; // Set to invalid index temporarily
+
+                // Apply after frame to ensure widget tree is updated
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  setState(() {
+                    _currentIndex = currentTab; // Restore original index
+                  });
+
+                  // Now force refresh the data
+                  if (_myRecipesKey.currentState != null) {
+                    _myRecipesKey.currentState!.fetchUserRecipes();
+                  }
+                  if (_discoverKey.currentState != null) {
+                    _discoverKey.currentState!.fetchRecipes();
+                  }
+                });
+              });
+            });
+
+            // Show success notification
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Recipe deleted successfully')),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content:
+                      Text('Failed to delete recipe: ${response.statusCode}')),
+            );
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
       }
     });
   }
@@ -224,16 +353,18 @@ class _MainAppScreenState extends State<MainAppScreen> {
       ),
       body: _showingAddRecipe
           ? AddRecipeContent(
-
               user: _user,
               recipeToEdit: _recipeToEdit,
-               back: () => hideAddRecipe(),
-              onRecipeAdded: () => hideAddRecipe(recipeAdded: true), // Show Add Recipe when flag is set
-					): _showingRecipeDetail
+              back: () => hideAddRecipe(),
+              onRecipeAdded: () => hideAddRecipe(
+                  recipeAdded: true), // Show Add Recipe when flag is set
+            )
+          : _showingRecipeDetail
               ? RecipeDetailContent(
                   user: _user,
                   recipe: _selectedRecipe!,
                   onBack: hideRecipeDetail,
+                  onBookmark: onBookmark,
                   onEdit: editRecipe,
                   onDelete: deleteRecipe,
                 )
@@ -241,16 +372,18 @@ class _MainAppScreenState extends State<MainAppScreen> {
                   index: _currentIndex,
                   children: [
                     MyRecipesContent(
-											key: _myRecipesKey,
+                      key: _myRecipesKey,
                       showAddRecipe: showAddRecipe,
                       onRecipeSelected: showRecipeDetail, // Add this callback
+                      onBookmark: onBookmark,
                       deleteRecipe: deleteRecipe,
                       user: _user,
                     ),
                     DiscoverContent(
-											key: _discoverKey,
+                      key: _discoverKey,
                       user: _user,
                       onRecipeSelected: showRecipeDetail, // Add this callback
+                      onBookmark: onBookmark,
                     ),
                     Container(), // Placeholder for third tab
                   ],
