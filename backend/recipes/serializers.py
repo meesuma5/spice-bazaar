@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Recipes
-from django.utils.duration import duration_string
 from django.utils import timezone
 from reviews.models import Reviews
 from users.models import Bookmarks

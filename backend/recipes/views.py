@@ -1,6 +1,6 @@
 from rest_framework import generics
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.db.models import Exists, OuterRef
+from rest_framework.permissions import IsAuthenticated
+from django.db.models import Exists, OuterRef, Value
 
 from .models import Recipes
 from users.models import Bookmarks
@@ -46,6 +46,17 @@ class UserRecipesView(generics.ListAPIView): # for getting a particular user's r
             is_bookmarked=bookmark_exists
         ).order_by('-upload_date').select_related('user')
     
+class BookmarkedRecipesView(generics.ListAPIView): # for getting a particular user's bookmarked recipes
+    serializer_class = RecipeCatalogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        bookmarked_recipes = Bookmarks.objects.filter(user=user).values_list('recipe_id', flat=True)
+        return Recipes.objects.filter(recipe_id__in=bookmarked_recipes).annotate(
+            is_bookmarked=Value(True)  # All recipes in this queryset are bookmarked
+        ).order_by('-upload_date').select_related('user')
+
 class RecipeViewView(generics.RetrieveAPIView): # for viewing a recipie (any)
     serializer_class = RecipeViewSerializer
     permission_classes = [IsAuthenticated]
