@@ -182,16 +182,19 @@ class DetailedRecipe {
   final List<Ingredient> ingredients;
   final List<String> instructions;
   final String? video_link;
-  List<Reviews>? reviews;
+  List<Reviews> reviews = [];
+  Reviews? userReview;
   DetailedRecipe({
     required this.recipe,
     required List<dynamic> ingredients,
     required this.instructions,
     this.video_link,
-    this.reviews,
-  }) : ingredients = ingredients
+    this.userReview,
+    List<Reviews>? reviews,
+  })  : ingredients = ingredients
             .map((ingredientJson) => Ingredient.fromJson(ingredientJson))
-            .toList();
+            .toList(),
+        reviews = reviews ?? [];
   factory DetailedRecipe.fromJson(Recipe recipe, Map<String, dynamic> json) {
     return DetailedRecipe(
       recipe: recipe,
@@ -203,28 +206,28 @@ class DetailedRecipe {
               .map((reviewJson) => Reviews.fromJson(reviewJson))
               .toList()
           : [],
+      userReview: json['your_review'] != null
+          ? Reviews.fromJson(json['your_review'])
+          : null,
     );
   }
-	void addReview(Reviews review) {
-		reviews ??= [];
-		reviews!.add(review);
-	}
+  void addReview(Reviews review) {
+    reviews ??= [];
+    reviews!.add(review);
+  }
 
-	void updateReview(Reviews review) {
-		if (reviews != null) {
-			int index = reviews!.indexWhere((r) => r.id == review.id);
-			if (index != -1) {
-				reviews![index] = review;
-			}
-		}
-	}
-	void removeReview(Reviews review) {
-		if (reviews != null) {
-			reviews!.remove(review);
-		}
-	}
+  void updateReview(Reviews review) {
+    if (reviews != null) {
+      int index = reviews!.indexWhere((r) => r.id == review.id);
+      if (index != -1) {
+        reviews![index] = review;
+      }
+    }
+  }
 
-
-
-	
+  void removeReview(Reviews review) {
+    if (reviews != null) {
+      reviews!.remove(review);
+    }
+  }
 }
