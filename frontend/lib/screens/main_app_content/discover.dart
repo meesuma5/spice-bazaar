@@ -11,13 +11,13 @@ import 'dart:convert';
 class DiscoverContent extends StatefulWidget {
   final Function(Recipe) onRecipeSelected;
   final User user; // User object to fetch recipes of
-	final Function(Recipe) onBookmark;
+  final Function(Recipe) onBookmark;
 
   const DiscoverContent({
     super.key,
     required this.onRecipeSelected,
     required this.user,
-		required this.onBookmark,
+    required this.onBookmark,
   });
 
   @override
@@ -77,7 +77,7 @@ class DiscoverContentState extends State<DiscoverContent> {
             ? Center(child: Text(errorMessage!))
             : ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: recipes.length,
+                itemCount: recipes.length + 1,
                 itemBuilder: (context, index) {
                   return index == 0
                       ? Padding(
@@ -105,7 +105,7 @@ class DiscoverContentState extends State<DiscoverContent> {
                       : Padding(
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: RecipeCard(
-															onBookmark: widget.onBookmark,
+                              onBookmark: widget.onBookmark,
                               key: ValueKey(recipes[index - 1].recipeId),
                               recipe: recipes[index - 1],
                               onTap: widget.onRecipeSelected),

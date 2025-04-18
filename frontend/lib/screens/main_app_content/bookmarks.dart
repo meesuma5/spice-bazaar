@@ -6,16 +6,18 @@ import 'package:spice_bazaar/widgets/recipe_card.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:uicons_updated/icons/uicons_regular.dart';
+
 class FavouritesContent extends StatefulWidget {
   final Function(Recipe) onRecipeSelected;
   final User user; // User object to fetch recipes of
-	final Function(Recipe) onBookmark;
+  final Function(Recipe) onBookmark;
 
   const FavouritesContent({
     super.key,
     required this.onRecipeSelected,
     required this.user,
-		required this.onBookmark,
+    required this.onBookmark,
   });
 
   @override
@@ -36,8 +38,8 @@ class FavouritesContentState extends State<FavouritesContent> {
 
   void fetchRecipes() async {
     try {
-      final response =
-          await http.get(Uri.parse('$baseUrl/api/recipes/catalog/'), headers: {
+      final response = await http
+          .get(Uri.parse('$baseUrl/api/recipes/bookmarks/'), headers: {
         'Authorization': 'Bearer ${widget.user.accessToken}',
       });
 
@@ -72,43 +74,78 @@ class FavouritesContentState extends State<FavouritesContent> {
     return isLoading
         ? const Center(child: CircularProgressIndicator())
         : errorMessage != null
-            ? Center(child: Text(errorMessage!))
-            : ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: recipes.length,
-                itemBuilder: (context, index) {
-                  return index == 0
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 12.0, horizontal: 4),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Discover Recipes',
-                                style: poppins(
-                                    style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold)),
+            ? Center(
+                child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  errorMessage!,
+                  style: poppins(
+                      style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.red,
+                  )),
+                ),
+              ))
+            : (recipes.isNotEmpty)
+                ? ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: recipes.length + 1,
+                    itemBuilder: (context, index) {
+                      return index == 0
+                          ? Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12.0, horizontal: 4),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Favourites',
+                                    style: poppins(
+                                        style: const TextStyle(
+                                            fontSize: 28,
+                                            fontWeight: FontWeight.bold)),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Revisit recipes you love.',
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.grey[600]),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Explore our collection of delicious recipes from around the world.',
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.grey[600]),
-                              ),
-                            ],
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: RecipeCard(
+                                  onBookmark: widget.onBookmark,
+                                  key: ValueKey(recipes[index - 1].recipeId),
+                                  recipe: recipes[index - 1],
+                                  onTap: widget.onRecipeSelected),
+                            );
+                    },
+                  )
+                : Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            UiconsRegular.user_chef,
+                            color: mainPurple,
+                            size: 54,
                           ),
-                        )
-                      : Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: RecipeCard(
-															onBookmark: widget.onBookmark,
-                              key: ValueKey(recipes[index - 1].recipeId),
-                              recipe: recipes[index - 1],
-                              onTap: widget.onRecipeSelected),
-                        );
-                },
-              );
+                          Text(
+                            'Hola Chef! Heart some recipes to see them here.',
+                            style: poppins(
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
   }
 }

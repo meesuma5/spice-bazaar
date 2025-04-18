@@ -953,7 +953,7 @@ class _AddRecipeContentState extends State<AddRecipeContent> {
       'diet': _selectedDiet,
       'ingredients': jsonEncode(ingredientsList),
       'instructions': jsonEncode(_instructionSteps),
-      'image': imageUrl,
+      'image': imageUrl ?? '',
       'video_link': _videoLinkController.text
     };
 

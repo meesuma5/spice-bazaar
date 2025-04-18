@@ -5,6 +5,7 @@ import 'package:spice_bazaar/models/profile_drawer.dart';
 import 'package:spice_bazaar/models/unit_conversion.dart';
 import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/screens/main_app_content/add_recipe.dart';
+import 'package:spice_bazaar/screens/main_app_content/bookmarks.dart';
 import 'package:spice_bazaar/screens/main_app_content/my_recipes.dart'
     show MyRecipesContent, MyRecipesContentState;
 import 'package:spice_bazaar/screens/main_app_content/discover.dart'
@@ -33,6 +34,8 @@ class _MainAppScreenState extends State<MainAppScreen> {
       GlobalKey<MyRecipesContentState>();
   final GlobalKey<DiscoverContentState> _discoverKey =
       GlobalKey<DiscoverContentState>();
+  final GlobalKey<FavouritesContentState> _favouritesKey =
+      GlobalKey<FavouritesContentState>();
   int _currentIndex = 1; // Start with My Recipes (index 0)
   late User _user;
 
@@ -56,6 +59,12 @@ class _MainAppScreenState extends State<MainAppScreen> {
     super.dispose();
   }
 
+  void refreshFavourites() {
+    if (_favouritesKey.currentState != null) {
+      _favouritesKey.currentState!.fetchRecipes();
+    }
+  }
+
   void _refreshAllData() {
     // Refresh My Recipes content
     if (_myRecipesKey.currentState != null) {
@@ -66,6 +75,8 @@ class _MainAppScreenState extends State<MainAppScreen> {
     if (_discoverKey.currentState != null) {
       _discoverKey.currentState!.fetchRecipes();
     }
+    // Refresh Favourites content
+    refreshFavourites();
   }
 
   void _onNavItemTapped(int index) {
@@ -126,6 +137,10 @@ class _MainAppScreenState extends State<MainAppScreen> {
     );
     if (resp.statusCode == 201) {
       print('Recipe bookmarked successfully');
+      setState(() {
+        refreshFavourites();
+      });
+      ();
     } else {
       print('Failed to bookmark recipe: ${resp.statusCode}');
     }
@@ -140,6 +155,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
     );
     if (resp.statusCode == 200) {
       print('Recipe unbookmarked successfully');
+      refreshFavourites();
     } else {
       print('Failed to unbookmark recipe: ${resp.statusCode}');
     }
@@ -167,6 +183,31 @@ class _MainAppScreenState extends State<MainAppScreen> {
     });
   }
 
+  void _hardRefresh() {
+    // Refresh My Recipes content
+    // Force rebuilding by setting the current index again
+    setState(() {});
+
+    // Use Future.delayed to ensure the UI updates before we attempt to refresh data
+    // This gives Flutter time to dispose of any existing state
+    Future.delayed(const Duration(milliseconds: 100), () {
+      // Explicitly set to rebuild with fresh data
+      setState(() {
+        // Reset the current tab to force a complete rebuild
+        int currentTab = _currentIndex;
+        _currentIndex = -1; // Set to invalid index temporarily
+
+        // Apply after frame to ensure widget tree is updated
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          setState(() {
+            _currentIndex = currentTab; // Restore original index
+          });
+          _refreshAllData(); // Refresh all data
+          print('Refreshed all data');
+        });
+      });
+    });
+  }
 
   void deleteRecipe(Recipe recipe) {
     showDialog<bool>(
@@ -201,36 +242,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
               _showingRecipeDetail = false;
               _selectedRecipe = null;
             });
-
-            // Force rebuilding by setting the current index again
-            setState(() {});
-
-            // Use Future.delayed to ensure the UI updates before we attempt to refresh data
-            // This gives Flutter time to dispose of any existing state
-            Future.delayed(const Duration(milliseconds: 100), () {
-              // Explicitly set to rebuild with fresh data
-              setState(() {
-                // Reset the current tab to force a complete rebuild
-                int currentTab = _currentIndex;
-                _currentIndex = -1; // Set to invalid index temporarily
-
-                // Apply after frame to ensure widget tree is updated
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  setState(() {
-                    _currentIndex = currentTab; // Restore original index
-                  });
-
-                  // Now force refresh the data
-                  if (_myRecipesKey.currentState != null) {
-                    _myRecipesKey.currentState!.fetchUserRecipes();
-                  }
-                  if (_discoverKey.currentState != null) {
-                    _discoverKey.currentState!.fetchRecipes();
-                  }
-                });
-              });
-            });
-
+            _hardRefresh(); // Refresh the data after deletion
             // Show success notification
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Recipe deleted successfully')),
@@ -255,24 +267,24 @@ class _MainAppScreenState extends State<MainAppScreen> {
     _scaffoldKey.currentState?.openDrawer();
   }
 
-
   void hideProfileDrawer() {
     _scaffoldKey.currentState?.closeDrawer();
   }
 
-	void showUnitConverterDrawer(){
-		_scaffoldKey.currentState?.openEndDrawer();
-	}
-	void hideUnitConverterDrawer(){
-		_scaffoldKey.currentState?.closeEndDrawer();
-	}
+  void showUnitConverterDrawer() {
+    _scaffoldKey.currentState?.openEndDrawer();
+  }
+
+  void hideUnitConverterDrawer() {
+    _scaffoldKey.currentState?.closeEndDrawer();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       drawer: ProfileDrawer(user: _user),
-			endDrawer: const UnitConverterDrawer(),
+      endDrawer: const UnitConverterDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -317,10 +329,10 @@ class _MainAppScreenState extends State<MainAppScreen> {
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
         actions: [
-					IconButton(
-                icon: Icon(UIcons.regularRounded.equality),
-                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-              ),
+          IconButton(
+            icon: Icon(UIcons.regularRounded.equality),
+            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+          ),
           const SizedBox(width: 16),
         ],
         elevation: 1,
@@ -359,7 +371,12 @@ class _MainAppScreenState extends State<MainAppScreen> {
                       onRecipeSelected: showRecipeDetail, // Add this callback
                       onBookmark: onBookmark,
                     ),
-                    Container(), // Placeholder for third tab
+                    FavouritesContent(
+                      key: _favouritesKey,
+                      onRecipeSelected: showRecipeDetail,
+                      user: widget.user,
+                      onBookmark: onBookmark,
+                    ), // Placeholder for third tab
                   ],
                 ),
       bottomNavigationBar: BottomNavBar(
