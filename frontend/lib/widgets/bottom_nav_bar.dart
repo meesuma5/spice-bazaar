@@ -41,21 +41,27 @@ class BottomNavBar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavItem(
-                itemIndex: 0,
-                label: 'My Creations',
-                isAsset: true,
-                imagePath: "assets/icons/recipeRR.svg"),
-            _buildNavItem(
-                itemIndex: 1,
-                icon: UIcons.regularRounded.drafting_compass,
-                label: 'Chef\'s Book',
-                isAsset: true,
-                imagePath: "assets/icons/recipe-bookRR.svg"),
-            _buildNavItem(
-                itemIndex: 2,
-                icon: UIcons.regularRounded.heart,
-                label: 'Favorites'),
+            Expanded(
+							child: _buildNavItem(
+									itemIndex: 0,
+									label: 'My Creations',
+									isAsset: true,
+									imagePath: "assets/icons/recipeRR.svg"),
+						),
+            Expanded(
+							child: _buildNavItem(
+									itemIndex: 1,
+									icon: UIcons.regularRounded.drafting_compass,
+									label: 'Chef\'s Book',
+									isAsset: true,
+									imagePath: "assets/icons/recipe-bookRR.svg"),
+						),
+            Expanded(
+							child: _buildNavItem(
+									itemIndex: 2,
+									icon: UIcons.regularRounded.heart,
+									label: 'Favorites'),
+						),
             // _buildAddButton(),
           ],
         ),
@@ -72,42 +78,35 @@ class BottomNavBar extends StatelessWidget {
     final isActive = index == itemIndex;
     return InkWell(
       onTap: () => onTap(itemIndex),
-      child: Container(
-        width: 100,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          color: isActive ? lighterPurple : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Use Icon widget for non-asset icons
-            if (isAsset && imagePath != null)
-              // Use SvgPicture widget for SVG assets
-              SvgPicture.asset(
-                imagePath,
-                height: 27,
-                width: 27,
-                color: isActive ? mainPurple : Colors.grey,
-              )
-            else
-              // Use Icon widget for non-asset icons
-              Icon(
-                icon,
-                size: 27,
-                color: isActive ? mainPurple : Colors.grey,
-              ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: isActive ? mainPurple : Colors.grey,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
+      child: Column(
+      	mainAxisSize: MainAxisSize.min,
+      	children: [
+      		// Use Icon widget for non-asset icons
+      		if (isAsset && imagePath != null)
+      			// Use SvgPicture widget for SVG assets
+      			SvgPicture.asset(
+      				imagePath,
+      				height: 27,
+      				width: 27,
+      				color: isActive ? mainPurple : Colors.grey,
+      			)
+      		else
+      			// Use Icon widget for non-asset icons
+      			Icon(
+      				icon,
+      				size: 27,
+      				color: isActive ? mainPurple : Colors.grey,
+      			),
+      		const SizedBox(height: 4),
+      		Text(label,
+      				style: poppins(
+      					style: TextStyle(
+      						color: isActive ? mainPurple : Colors.grey,
+      						fontSize:  12,
+      										fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+      					),
+      				)),
+      	],
       ),
     );
   }

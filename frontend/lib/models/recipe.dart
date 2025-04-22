@@ -10,6 +10,7 @@ class Recipe {
   final String? cookTime;
   final String uploadDate;
   final String author;
+	final double rating;
   final String? image; // Mark as nullable with ?
   bool isBookmarked;
 
@@ -22,6 +23,7 @@ class Recipe {
     required this.uploadDate,
     required this.author,
     required this.isBookmarked,
+		this.rating = 0.0, // Default rating to 0.0
     this.cookTime, // Optional cook time
     this.image, // Handle nullable image
   });
@@ -37,6 +39,8 @@ class Recipe {
         uploadDate: json['upload_date'] ?? '',
         author: json['author'] ?? '',
         image: json['image'],
+				rating: json['average_rating'] ?? 0.0,
+
         isBookmarked:
             json["is_bookmarked"] // No default needed as it's nullable
         );

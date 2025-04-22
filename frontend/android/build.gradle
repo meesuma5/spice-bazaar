@@ -16,3 +16,9 @@ subprojects {
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
+
+ext {
+    // Change compileSdkVersion and targetSdkVersion to 36
+    compileSdkVersion = 36
+    targetSdkVersion = 36
+}

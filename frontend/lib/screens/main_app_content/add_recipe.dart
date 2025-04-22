@@ -983,6 +983,7 @@ class _AddRecipeContentState extends State<AddRecipeContent> {
           headers: headers,
           body: recipeData,
         );
+				widget.user.createdRecipes += 1;
       } else {
         // PUT request to update an existing recipe
         uri =

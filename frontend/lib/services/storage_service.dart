@@ -6,11 +6,25 @@ class StorageService {
 
   // Upload a file
   Future<String> uploadFile(String path, File file) async {
-    try {
-      TaskSnapshot snapshot = await _storage.ref(path).putFile(file);
+    TaskSnapshot? snapshot;
+		try {
+
+			final fileName = file.path.split('/').last;
+			print(fileName);
+			snapshot = await _storage.ref(fileName).putFile(file);
+			print("File uploaded successfully");
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
+			if (e is FirebaseException) {
+				if (snapshot != null) {
+					print('Firebase Storage Error: [${snapshot.state}] ${snapshot.ref} ${snapshot.metadata}');
+					print(snapshot.ref);
+				}
+				print('Firebase Storage Error: [${e.code}] ${e.message}');
+			} else {
+				print('Error uploading file: $e');
+			}
       print('Error uploading file: $e');
       rethrow;
     }

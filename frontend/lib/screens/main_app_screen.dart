@@ -1,8 +1,8 @@
 // discover_screen.dart - Renamed to MainAppScreen to reflect its new role
 import 'package:flutter/material.dart';
 import 'package:spice_bazaar/constants.dart';
-import 'package:spice_bazaar/models/profile_drawer.dart';
-import 'package:spice_bazaar/models/unit_conversion.dart';
+import 'package:spice_bazaar/widgets/profile_drawer.dart';
+import 'package:spice_bazaar/widgets/unit_conversion.dart';
 import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/screens/main_app_content/add_recipe.dart';
 import 'package:spice_bazaar/screens/main_app_content/bookmarks.dart';
@@ -15,6 +15,9 @@ import 'package:spice_bazaar/widgets/bottom_nav_bar.dart';
 import 'package:spice_bazaar/models/recipe.dart';
 import 'package:http/http.dart' as http;
 import 'package:uicons/uicons.dart';
+import 'package:spice_bazaar/models/recipe_filters.dart';
+import 'package:spice_bazaar/widgets/recipe_filters_drawer.dart';
+import 'package:uicons_updated/uicons.dart';
 
 class MainAppScreen extends StatefulWidget {
   final User user;
@@ -38,6 +41,12 @@ class _MainAppScreenState extends State<MainAppScreen> {
       GlobalKey<FavouritesContentState>();
   int _currentIndex = 1; // Start with My Recipes (index 0)
   late User _user;
+  final RecipeFilters _recipeFilters = RecipeFilters();
+  bool showFilters = false;
+  // List of all tags for filtering
+  // This should be populated with actual data from your backend or a predefined list
+  // For now, it's an empty list
+  List<String> _allTags = [];
 
   // Track if AddRecipe is currently shown
   bool _showingAddRecipe = false;
@@ -263,6 +272,15 @@ class _MainAppScreenState extends State<MainAppScreen> {
     });
   }
 
+  // Function to update the list of tags
+  void updateTagsList() {
+    if (_discoverKey.currentState != null) {
+      setState(() {
+        _allTags = _discoverKey.currentState!.getAllTags();
+      });
+    }
+  }
+
   void showProfileDrawer() {
     _scaffoldKey.currentState?.openDrawer();
   }
@@ -284,7 +302,29 @@ class _MainAppScreenState extends State<MainAppScreen> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: ProfileDrawer(user: _user),
-      endDrawer: const UnitConverterDrawer(),
+      endDrawer: (showFilters)
+          ? FilterDrawer(
+              filters: _recipeFilters,
+              availableTags: _allTags,
+              onFiltersChanged: (newFilters) {
+                setState(() {
+                  _recipeFilters.searchQuery = newFilters.searchQuery;
+                  _recipeFilters.selectedTags = newFilters.selectedTags;
+                  _recipeFilters.maxPrepTime = newFilters.maxPrepTime;
+                  _recipeFilters.maxCookTime = newFilters.maxCookTime;
+									_recipeFilters.sortBy = newFilters.sortBy;
+                });
+                if (_discoverKey.currentState != null) {
+                  _discoverKey.currentState!.updateFilters(_recipeFilters);
+                }
+              },
+              onApply: () {
+                if (_discoverKey.currentState != null) {
+                  _discoverKey.currentState!.applyFilters();
+                }
+              },
+            )
+          : const UnitConverterDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -325,13 +365,24 @@ class _MainAppScreenState extends State<MainAppScreen> {
                 },
               )
             : IconButton(
-                icon: Icon(UIcons.solidRounded.user),
+                icon: const Icon(
+                  UiconsSolid.user,
+                  size: 24,
+                ),
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
         actions: [
+          if (_currentIndex == 1 && !_showingAddRecipe && !_showingRecipeDetail)
+            IconButton(
+              icon: const Icon(
+                UiconsRegular.filter,
+                size: 24,
+              ),
+              onPressed: () => endDrawerOpener(isFilters: true),
+            ),
           IconButton(
-            icon: Icon(UIcons.regularRounded.equality),
-            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+            icon: Icon(UIcons.regularRounded.equality, size: 24),
+            onPressed: () => endDrawerOpener(),
           ),
           const SizedBox(width: 16),
         ],
@@ -385,5 +436,15 @@ class _MainAppScreenState extends State<MainAppScreen> {
         onAddRecipe: showAddRecipe,
       ),
     );
+  }
+
+  void endDrawerOpener({bool isFilters = false}) {
+    setState(() {
+      showFilters = isFilters;
+    });
+    if (isFilters) {
+      updateTagsList();
+    }
+    _scaffoldKey.currentState?.openEndDrawer();
   }
 }

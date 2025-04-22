@@ -156,6 +156,21 @@ class _RecipeCardState extends State<RecipeCard> {
                       ],
                     ),
                     const SizedBox(width: 16),
+										// Rating with stars
+										Row(
+											children: [
+												const Icon(UiconsRegular.star, 
+														size: 16, color: Colors.amber),
+												const SizedBox(width: 4),
+												Text(
+													"${widget.recipe.rating.toStringAsFixed(1)} ★",
+													style: TextStyle(
+														fontSize: 14,
+														color: Colors.grey[600],
+													),
+												),
+											],
+										),
                   ],
                 ),
                 const SizedBox(height: 16),

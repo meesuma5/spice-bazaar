@@ -3,6 +3,7 @@ import 'package:spice_bazaar/constants.dart';
 import 'package:spice_bazaar/models/users.dart';
 import 'package:spice_bazaar/widgets/custom_button.dart';
 import 'package:uicons/uicons.dart';
+import 'package:uicons_updated/icons/uicons_regular.dart';
 
 // Create a new file for your profile drawer
 class ProfileDrawer extends StatelessWidget {
@@ -20,7 +21,7 @@ class ProfileDrawer extends StatelessWidget {
             Align(
               alignment: Alignment.topRight,
               child: IconButton(
-                icon: const Icon(Icons.close),
+                icon: const Icon(UiconsRegular.cross),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -28,8 +29,10 @@ class ProfileDrawer extends StatelessWidget {
               child: CircleAvatar(
                 radius: 40,
                 backgroundImage: NetworkImage(
-                  user.profileImageUrl == '' ?
-                      baseProfileImageLink : user.profileImageUrl ?? baseProfileImageLink, // Sample avatar image
+                  user.profileImageUrl == ''
+                      ? baseProfileImageLink
+                      : user.profileImageUrl ??
+                          baseProfileImageLink, // Sample avatar image
                 ),
               ),
             ),

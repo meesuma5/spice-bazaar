@@ -11,9 +11,14 @@ import 'screens/save_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+	try {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+	} catch (e) {
+		print('Error initializing Firebase: $e');
+	}
+	
   runApp(const SpiceBazaarApp());
 }
 
@@ -33,7 +38,6 @@ class SpiceBazaarApp extends StatelessWidget {
         '/': (context) => const HomeScreen(),
         '/signup': (context) => const SignUpScreen(),
         '/login': (context) => const LogInScreen(),
-        '/save': (context) => const SaveScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/discover') {

@@ -3,7 +3,7 @@ import 'package:spice_bazaar/constants.dart';
 class User {
   final String username;
   final String email;
-  final int createdRecipes;
+  int createdRecipes;
   final int bookmarkedRecipes;
   final String accessToken;
   final String refreshToken;

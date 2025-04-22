@@ -49,16 +49,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
         setState(() {
           _imageFile = File(pickedFile.path);
           // You now have the File object (_imageFile) which you can upload to Firebase Storage.
-          print('Selected image path: ${_imageFile!.path}');
-          _storageService.uploadFile(_imageFile!.path, _imageFile!).then((url) {
-            setState(() {
-              _imageUrl = url;
-              print(_imageUrl);
-            });
-          }).catchError((error) {
-            print('Error uploading image: $error');
-          });
+          print('Selected image path: ${_imageFile!.path} ${_imageFile!.isAbsolute}');
         });
+        
+        // Upload the file outside of setState
+        try {
+          String url = await _storageService.uploadFile(_imageFile!.path, _imageFile!);
+          setState(() {
+            _imageUrl = url;
+            print(_imageUrl);
+          });
+        } catch (error) {
+          print('Error uploading image: $error');
+          if (error is http.Response) {
+            print('Server response: ${error.body}');
+          }
+        }
       } else {
         print('No image selected.');
       }
