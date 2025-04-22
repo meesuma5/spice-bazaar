@@ -10,11 +10,12 @@ class RecipeCatalogSerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     is_bookmarked = serializers.SerializerMethodField()
+    average_rating = serializers.FloatField(read_only=True, default=0)  # Default to 0.0 if no reviews exist
     
     class Meta:
         model = Recipes
         # coming from the models
-        fields = ['recipe_id', 'title', 'description', 'tags', 'time', 'upload_date', 'author', 'image', 'is_bookmarked']
+        fields = ['recipe_id', 'title', 'description', 'tags', 'time', 'upload_date', 'author', 'image', 'is_bookmarked', 'average_rating']
     
     def get_tags(self, obj):
     

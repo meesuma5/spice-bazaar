@@ -1,6 +1,6 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Exists, OuterRef, Value
+from django.db.models import Exists, OuterRef, Value, Avg, Case, When, F, FloatField, Q
 
 from .models import Recipes
 from users.models import Bookmarks
@@ -15,17 +15,28 @@ class RecipeCatalogView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         
-        # Create a subquery that checks if current recipe is bookmarked
+        # Create bookmark subquery
         bookmark_exists = Exists(
             Bookmarks.objects.filter(
                 user=user,
-                recipe=OuterRef('pk')  # Reference to the current recipe being processed
+                recipe=OuterRef('pk')
             )
         )
         
-        # Annotate the queryset with bookmark information
+        # Return annotated queryset with both bookmark status AND average rating
         return Recipes.objects.annotate(
-            is_bookmarked=bookmark_exists
+            is_bookmarked=bookmark_exists,
+            average_rating=Avg(
+                'reviews__rating',  # Calculate average from related reviews
+                filter=Q(reviews__rating__isnull=False)  # Only include non-null ratings
+            )
+        ).annotate(
+            # Handle null values (recipes with no reviews)
+            average_rating=Case(
+                When(average_rating__isnull=True, then=Value(0)),
+                default=F('average_rating'),
+                output_field=FloatField()
+            )
         ).order_by('-upload_date').select_related('user')
 
 class UserRecipesView(generics.ListAPIView): # for getting a particular user's recipes, used to check your own uploaded recipes
@@ -43,7 +54,14 @@ class UserRecipesView(generics.ListAPIView): # for getting a particular user's r
         )
         
         return Recipes.objects.filter(user=user).annotate(
-            is_bookmarked=bookmark_exists
+            is_bookmarked=bookmark_exists,
+            average_rating=Avg('reviews__rating', filter=Q(reviews__rating__isnull=False))
+        ).annotate(
+            average_rating=Case(
+                When(average_rating__isnull=True, then=Value(0)),
+                default=F('average_rating'),
+                output_field=FloatField()
+            )
         ).order_by('-upload_date').select_related('user')
     
 class BookmarkedRecipesView(generics.ListAPIView): # for getting a particular user's bookmarked recipes
@@ -53,8 +71,16 @@ class BookmarkedRecipesView(generics.ListAPIView): # for getting a particular us
     def get_queryset(self):
         user = self.request.user
         bookmarked_recipes = Bookmarks.objects.filter(user=user).values_list('recipe_id', flat=True)
+        
         return Recipes.objects.filter(recipe_id__in=bookmarked_recipes).annotate(
-            is_bookmarked=Value(True)  # All recipes in this queryset are bookmarked
+            is_bookmarked=Value(True),
+            average_rating=Avg('reviews__rating', filter=Q(reviews__rating__isnull=False))
+        ).annotate(
+            average_rating=Case(
+                When(average_rating__isnull=True, then=Value(0)),
+                default=F('average_rating'),
+                output_field=FloatField()
+            )
         ).order_by('-upload_date').select_related('user')
 
 class RecipeViewView(generics.RetrieveAPIView): # for viewing a recipie (any)
